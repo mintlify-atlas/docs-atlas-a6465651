@@ -1,0 +1,172 @@
+---
+title: "wa-review: Full AWS Well-Architected Framework Review"
+sidebarTitle: "WA Review"
+description: "Run a complete 57-question AWS Well-Architected review across all 6 pillars with evidence-backed findings and Eisenhower-prioritized remediation plans."
+---
+
+The `wa-review` skill performs a comprehensive evaluation of your AWS workload against all 57 questions in the Well-Architected Framework. It analyzes your code, IaC, and configurations to produce evidence-backed findings — every gap is tied to a specific file path and line number — and then prioritizes remediation using an Eisenhower matrix so your team knows exactly what to tackle first.
+
+<Note>
+  This skill evaluates all 6 pillars. If you need a focused deep-dive on a single pillar — security, reliability, cost, performance, or sustainability — use the dedicated pillar skill instead. Use `wa-builder` to learn WA principles for your project, `architecture-decision-record` for documenting design decisions, and `migration-readiness` for migration assessment.
+</Note>
+
+## What It Produces
+
+Running `wa-review` delivers:
+
+- A **PlantUML architecture diagram** generated from your infrastructure code
+- A **Pillar Scorecard** (1–5 score per pillar with key strengths and gaps)
+- A **per-question assessment table** covering all 57 WA Framework questions with status, risk level, and evidence
+- **Critical/High/Medium/Low findings** with file paths, line numbers, and recommended AWS services
+- **Cross-pillar trade-off analysis** (e.g., security controls that impact performance)
+- A **prioritized remediation plan** organized into Quick Wins, Foundation, and Strategic phases
+- An **Eisenhower matrix** mapping each finding to Do First / Plan / Delegate / Defer
+
+## The 4-Step Review Process
+
+<Steps>
+  <Step title="Define Workload Scope">
+    The agent asks for the workload name, code packages to analyze, business criticality (critical / high / standard / low), and any known pain points. If you're already in a codebase with IaC, the agent skips the prompt and proceeds to discovery automatically.
+
+    The agent also determines whether a specialized WA Lens applies based on the workload type — for example, a Lambda-heavy architecture triggers the Serverless Lens.
+  </Step>
+  <Step title="Infrastructure Discovery">
+    The agent analyzes all infrastructure-as-code and deployment configurations, including:
+
+    - **CDK** (TypeScript, Python, Java, Go)
+    - **CloudFormation** templates (YAML, JSON)
+    - **Terraform** configurations (`.tf` files)
+    - **SAM / Serverless Framework** templates
+    - **CI/CD pipeline** definitions (CodePipeline, GitHub Actions, etc.)
+    - **Monitoring configurations** (CloudWatch alarms, dashboards)
+    - **Deployment configurations** (CodeDeploy, ECS deployment settings)
+
+    For every infrastructure component, the agent records the resource type, logical name, file path, line numbers, and security/resilience/cost-relevant configurations.
+  </Step>
+  <Step title="Application Architecture Discovery">
+    The agent analyzes application code for architectural patterns: entry points, service communication (retries, timeouts, circuit breakers), data access patterns, error handling, authentication and authorization logic, and observability instrumentation.
+
+    A **checkpoint** follows — the agent summarizes what it found and asks for confirmation before proceeding to evaluation.
+  </Step>
+  <Step title="Evaluate Every WA Framework Question">
+    The agent works through all 57 questions across 6 pillars. For each question it reports:
+
+    - **Status**: `Implemented` / `Partially Implemented` / `Not Implemented` / `Cannot Determine`
+    - **Evidence**: specific file paths and line numbers
+    - **Gaps**: what's missing or weak
+    - **Risk**: what could go wrong
+
+    A second **checkpoint** follows before the final report is produced.
+  </Step>
+</Steps>
+
+## The 6 Pillars and Questions
+
+<Accordion title="Operational Excellence — OPS 1–11">
+  Covers organization, observability, deployment risk, operational readiness, event management, and evolution of operations. Areas examined include runbooks, CI/CD pipeline safety, monitoring dashboards, alarm configurations, and post-incident review processes.
+</Accordion>
+
+<Accordion title="Security — SEC 1–11">
+  Covers foundations, identity management, permissions, detection controls, network and compute protection, data protection, incident response, and application security. The agent analyzes IAM roles and policies, KMS key configurations, VPC rules, CloudTrail, GuardDuty, Security Hub, and encryption settings across all storage resources.
+</Accordion>
+
+<Accordion title="Reliability — REL 1–13">
+  Covers service quotas, network topology, service architecture, distributed system design, monitoring, scaling, change management, backups, fault isolation, and disaster recovery. The agent examines Multi-AZ configurations, backup plans, auto-scaling policies, circuit breakers, retry logic, DLQs, and health checks.
+</Accordion>
+
+<Accordion title="Performance Efficiency — PERF 1–5">
+  Covers resource selection, compute configuration, storage and data choices, networking, and the optimization process. The agent evaluates instance families, Lambda memory settings, caching layers (ElastiCache, DAX, CloudFront), database engine choices, connection pooling, and load balancing configurations.
+</Accordion>
+
+<Accordion title="Cost Optimization — COST 1–11">
+  Covers financial management, usage governance, cost monitoring, decommissioning, service selection, right-sizing, pricing models, data transfer, demand management, and cost evolution. The agent examines instance types, capacity modes (provisioned vs on-demand), Savings Plans coverage, data transfer patterns, and idle resources.
+</Accordion>
+
+<Accordion title="Sustainability — SUS 1–6">
+  Covers region selection, demand alignment, architecture patterns, data management, hardware selection, and organizational processes. The agent checks Graviton adoption, auto-scaling to zero, S3 lifecycle policies, log retention settings, and managed service usage.
+</Accordion>
+
+## Review Depth Options
+
+You control how deep the review goes by adjusting your prompt. The agent adapts the scope automatically.
+
+| Mode | How to invoke | What it does |
+|------|--------------|--------------|
+| **Full review** | `"WA review"`, `"full review"`, `"comprehensive"` | Evaluates all 57 questions; loads per-question BP reference files; cites specific BP IDs |
+| **Quick review** | `"quick review"`, `"high-level"`, `"summary"` | Evaluates all 57 questions at question level only — no BP reference files loaded; faster |
+| **Pillar-scoped** | `"review security and reliability only"` | Full depth for specified pillars only; skips all other pillars |
+| **Single-question** | `"how are we handling permissions?"` | Loads only the relevant question file |
+| **Lens-only** | `"evaluate against the serverless lens"` | Skips core 57 questions; evaluates only lens-specific best practices |
+| **Progressive** | Start quick, then `"drill into security"` | Quick scan first, then deep-dive on flagged pillars |
+
+## Supported WA Lenses
+
+Lenses are additive — they extend the core 57 questions with domain-specific best practices. When the workload matches a lens domain, the agent evaluates lens questions after completing the core framework.
+
+<CardGroup cols={3}>
+  <Card title="Serverless" icon="bolt">Lambda, API Gateway, Step Functions, event-driven architectures</Card>
+  <Card title="Generative AI" icon="brain">LLM workloads, RAG pipelines, fine-tuning, prompt engineering</Card>
+  <Card title="Agentic AI" icon="robot">AI agents, orchestration, tool use, safety guardrails</Card>
+  <Card title="Machine Learning" icon="chart-line">ML lifecycle (MLOps), training/deployment, data engineering</Card>
+  <Card title="Data Analytics" icon="database">Data pipelines, governance, catalogs, lineage, analytics performance</Card>
+  <Card title="SaaS" icon="users">Multi-tenancy, tenant isolation, onboarding, metering, tiering</Card>
+  <Card title="Financial Services" icon="building-columns">FSI compliance, data residency, resilience, auditability</Card>
+  <Card title="Healthcare" icon="hospital">HIPAA, clinical data, interoperability, patient privacy</Card>
+  <Card title="IoT" icon="microchip">IoT devices, telemetry, edge computing, fleet provisioning, OTA updates</Card>
+  <Card title="Games Industry" icon="gamepad">Game backends, real-time multiplayer, player data, live operations</Card>
+  <Card title="Containers" icon="box">Container image builds, supply chain security, registries, CI/CD</Card>
+  <Card title="HPC" icon="server">HPC clusters, parallel workloads, scheduling, low-latency networking</Card>
+</CardGroup>
+
+Additional lenses available: Responsible AI, Hybrid Networking, DevOps Guidance, Migration, Life Sciences, End User Computing, Supply Chain, Video Streaming & Advertising, Telco, SAP, Modern Industrial Data Technology, Microsoft Workloads, Connected Mobility, Government, Streaming Media.
+
+## Token Strategy and Cost
+
+The full reference corpus is 57 question files (~2.2 MB). The agent never loads all files simultaneously — it uses a two-pass approach by default.
+
+**Pass 1 — Quick scan (no reference files):** The agent works through all 6 pillars sequentially using its knowledge and the code discovered in Steps 2–3. Questions are marked as "Implemented", "Gaps found", or "Cannot Determine".
+
+**Pass 2 — Selective deep dive:** Only questions flagged as "Gaps found" in Pass 1 get their reference file loaded. The agent reads, evaluates, records, and moves on — one file at a time. This typically loads 15–25 files instead of 57, reducing token consumption by 50–70%.
+
+| Review type | Reference tokens | Est. input cost (Claude Opus 4) | Est. total cost |
+|-------------|-----------------|--------------------------------|-----------------|
+| Quick review (no reference files) | ~5K | < $0.01 | ~$0.50–$1.00 |
+| Full review, two-pass (~20 gap files) | ~190K | ~$2.85 | ~$4–$7 |
+| Full review, all 57 questions | ~550K | ~$8.25 | ~$10–$15 |
+| + Serverless Lens | +27K | +$0.40 | +$0.50–$1.00 |
+| + Generative AI Lens | +80K | +$1.20 | +$1.50–$3.00 |
+
+<Tip>
+  **Recommended workflow:** Start with a quick review to identify which pillars have gaps. Then run a pillar-scoped full review on only the weak areas. Add a lens only if the workload type warrants it. This typically loads 10–20 reference files (~100K tokens) instead of all 57+ (~600K+).
+</Tip>
+
+## How to Invoke
+
+<CodeGroup>
+```text Claude Code (slash command)
+/wa-review
+```
+
+```text Natural language (all tools)
+WA review
+Full well-architected review
+Comprehensive WA review of this project
+```
+
+```text Scoped reviews
+Review security and reliability only
+Quick review — just flag the biggest gaps
+Review against the serverless lens
+How are we handling permissions? (loads SEC 3 only)
+```
+</CodeGroup>
+
+## Benchmark Results
+
+Evaluated with Claude Opus 4.8, 16K output tokens, paired comparison (same prompt with and without skill):
+
+| Baseline | With Skill | Delta |
+|----------|-----------|-------|
+| 82% | **100%** | **+18%** |
+
+The skill brings a bare model from 82% to 100% on structured behavioral assertions — covering pillar breadth, evidence quality, BP-level citation, and remediation specificity.

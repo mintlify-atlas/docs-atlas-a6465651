@@ -1,0 +1,65 @@
+---
+title: "Install Well-Architected Skills — All Methods"
+sidebarTitle: "Overview"
+description: "Three ways to install AWS Well-Architected skills into your project: skills.sh (npx), bootstrap scripts, or local install script. Supports macOS, Linux, and Windows."
+---
+
+There are three ways to install Well-Architected skills into your AI coding tool. **skills.sh via npx** and the **bootstrap scripts** require no local clone — they download the repo to a temporary directory, run the installer, and clean up. The **local install script** (`install.sh` / `install.ps1`) gives you the most control: symlink support, selective tool targeting, uninstall, and update checking. All three methods auto-detect which AI coding tools are configured in your project.
+
+<CardGroup cols={3}>
+  <Card title="skills.sh (npx)" icon="terminal" href="/installation/tool-adapters#skillssh-via-npx">
+    One-liner via `npx skills add`. No clone required. Auto-detects tools. Supports global installs.
+  </Card>
+  <Card title="Bootstrap Script" icon="download" href="/installation/tool-adapters#bootstrap-script">
+    `curl | bash` for macOS/Linux or a PowerShell one-liner for Windows. No clone required. Cleans up after itself.
+  </Card>
+  <Card title="Local Install Script" icon="code" href="/installation/manual">
+    Clone the repo, then run `install.sh` or `install.ps1`. Supports symlinks, multi-tool installs, uninstall, and update checks.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+No AWS credentials, no API calls, and no cloud setup is required. Installation is entirely local. You just need:
+
+- Your AI coding tool already configured in your project (e.g. Cursor open, `.claude/` present, `.kiro/` initialized)
+- `bash` (macOS/Linux) or PowerShell 5.1+ (Windows)
+- `curl` and `tar` for the bootstrap script method, or `node` / `npx` for skills.sh
+- `git` if you are cloning the repo for the local install method
+
+## Method comparison
+
+| Method | Requires clone | Auto-detects tools | Symlink support |
+|---|---|---|---|
+| skills.sh (npx) | No | Yes | No |
+| Bootstrap script | No | Yes | No |
+| install.sh / install.ps1 | Yes | Yes (`--tool auto`) | Yes |
+
+## install.sh options reference
+
+The following options are accepted by `install.sh` on macOS and Linux.
+
+| Option | Description |
+|---|---|
+| `--tool TOOL` | Target tool. Can be repeated. Valid values: `kiro`, `kiro-cli`, `claude-code`, `cursor`, `codex`, `windsurf`, `github-copilot`, `cline`, `gemini-cli`, `antigravity`, `junie`, `amp`, `openclaw`, `devops-agent`, `auto`, `all` |
+| `--symlink` | Use symlinks instead of copies — repo updates propagate automatically without reinstalling |
+| `--global` | Install to home directory (`~/CLAUDE.md`, `~/.kiro/`, etc.) and apply to all projects |
+| `--force` | Overwrite existing files without prompting |
+| `--uninstall` | Remove previously installed Well-Architected files from the target directory |
+| `--check-update` | Check if a newer version is available on GitHub |
+
+## install.ps1 parameters reference
+
+The following parameters are accepted by `install.ps1` on Windows PowerShell.
+
+| Parameter | Description |
+|---|---|
+| `-Tool` | Target tool(s). Accepts a comma-separated list. Valid values: `kiro`, `kiro-cli`, `claude-code`, `cursor`, `codex`, `windsurf`, `github-copilot`, `cline`, `gemini-cli`, `antigravity`, `junie`, `amp`, `openclaw`, `devops-agent`, `auto`, `all` |
+| `-Symlink` | Use symlinks instead of copies (requires elevated permissions on Windows) |
+| `-Global` | Install to home directory (`%USERPROFILE%\CLAUDE.md`, etc.) and apply to all projects |
+| `-Force` | Overwrite existing files without prompting |
+| `-TargetDir` | Project directory to install into (default: current directory) |
+
+<Note>
+  **Global installs** place files in your home directory — for example `~/CLAUDE.md`, `~/.kiro/`, `~/.cursor/`, `~/.junie/` — and apply to all projects that don't have their own project-level configuration. Use project-level installation (the default) if you only want Well-Architected guidance for specific projects. The installer prompts before overwriting existing files unless `--force` / `-Force` is supplied.
+</Note>

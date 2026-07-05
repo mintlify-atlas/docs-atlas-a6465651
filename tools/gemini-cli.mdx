@@ -1,0 +1,116 @@
+---
+title: "Install Well-Architected Skills in Gemini CLI"
+sidebarTitle: "Gemini CLI"
+description: "Configure Google Gemini CLI with Well-Architected steering via GEMINI.md and the skills/ directory for step-by-step architectural playbooks."
+---
+
+Gemini CLI reads `GEMINI.md` from the root of your project and loads it as persistent context. Combining this steering file with the `skills/` directory gives Gemini CLI access to 11 Well-Architected playbooks it can follow step-by-step whenever you mention architecture topics, ask for a review, or invoke a specific assessment.
+
+## What gets installed
+
+<CardGroup cols={2}>
+  <Card title="GEMINI.md" icon="file-lines">
+    Steering context that tells Gemini CLI to consider all six Well-Architected pillars, acknowledge trade-offs, and route structured assessment requests to the correct skill file.
+  </Card>
+  <Card title="skills/ directory" icon="folder-open">
+    Eleven skill directories, each containing a `SKILL.md` playbook. Gemini CLI follows these step-by-step when you ask for a specific review or plan.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy files into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/gemini-cli/GEMINI.md ./GEMINI.md
+      cp -r path/to/this-repo/skills ./skills
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\gemini-cli\GEMINI.md .\GEMINI.md
+      Copy-Item -Recurse path\to\this-repo\skills .\skills
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project root should now contain:
+
+    ```text
+    GEMINI.md
+    skills/
+      wa-review/SKILL.md
+      security-assessment/SKILL.md
+      reliability-improvement-plan/SKILL.md
+      cost-optimization-review/SKILL.md
+      performance-efficiency/SKILL.md
+      sustainability-optimization/SKILL.md
+      operational-excellence/SKILL.md
+      migration-readiness/SKILL.md
+      architecture-decision-record/SKILL.md
+      wa-builder/SKILL.md
+      wa-guardrails/SKILL.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles copying automatically:
+
+```bash
+./install.sh ~/my-project --tool gemini-cli
+```
+
+## Usage
+
+With `GEMINI.md` in your project root, Gemini CLI automatically applies Well-Architected principles whenever architecture topics arise. You can also explicitly invoke a specific skill:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this architecture.
+  ```
+
+  ```text Security assessment
+  Do a security assessment — focus on IAM and data protection.
+  ```
+
+  ```text Reliability
+  Find single points of failure and produce a reliability improvement plan.
+  ```
+
+  ```text Migration
+  Assess our migration readiness for moving this workload to AWS.
+  ```
+</CodeGroup>
+
+Gemini CLI reads `GEMINI.md` at session start. When you mention a review topic, it locates the matching `skills/{skill-name}/SKILL.md` and follows its structured steps.
+
+<Tip>
+  The `GEMINI.md` steering instructs Gemini CLI to group findings by pillar and label severity (🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice). Start with a quick review to identify gaps, then ask for a pillar-scoped deep-dive to keep token usage manageable.
+</Tip>
+
+## Available skills
+
+| Skill | What it does |
+|-------|-------------|
+| `wa-review` | Full 6-pillar review with prioritized findings report |
+| `security-assessment` | Deep-dive into IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Find SPOFs, assess recovery, produce remediation plan |
+| `cost-optimization-review` | Identify waste, right-sizing, pricing model improvements |
+| `performance-efficiency` | Resource selection, scaling, caching, optimization |
+| `sustainability-optimization` | Utilization, architecture efficiency, carbon reduction |
+| `operational-excellence` | CI/CD, observability, incident management, operational maturity |
+| `migration-readiness` | 7 Rs assessment, dependency analysis, migration plan |
+| `architecture-decision-record` | ADR with WA pillar impact analysis |
+| `wa-builder` | Learn WA for your workload and generate visual artifacts |
+| `wa-guardrails` | Generate preventive controls (Config rules, SCPs, CI checks) |

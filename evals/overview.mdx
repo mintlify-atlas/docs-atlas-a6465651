@@ -1,0 +1,75 @@
+---
+title: "Automated Skill Evaluation with Amazon Bedrock"
+sidebarTitle: "Overview"
+description: "Measure whether Well-Architected skills produce better outputs than a bare AI agent using the included LLM-as-judge evaluation runner powered by Amazon Bedrock."
+---
+
+Every skill in this repository ships with a structured evaluation suite that measures whether the skill actually improves agent outputs compared to a baseline — the same prompt, sent to the same model, with and without the skill's context loaded. The evaluation runner lives in the `evals/` directory and is powered by Amazon Bedrock's Converse API.
+
+## How evaluations work
+
+For each skill, a set of test cases defines realistic user prompts alongside 5–7 concrete, gradable assertions about what a good response should contain. The runner:
+
+1. Sends each prompt to Bedrock **without** the skill — producing a **baseline** response
+2. Sends the same prompt **with** the `SKILL.md` injected as a system prompt — producing a **with-skill** response
+3. Uses an LLM-as-judge (Claude Opus 4.8 by default) to grade every assertion as `PASS` or `FAIL` against both responses
+4. Reports a percentage score for each condition and the delta the skill contributes
+
+This paired-comparison design isolates the skill's contribution: any difference in scores comes from the skill context, not model variance or prompt wording.
+
+## What a test case looks like
+
+Each `evals/evals.json` file follows the [Agent Skills eval spec](https://agentskills.io/skill-creation/evaluating-skills). A single case includes:
+
+- **`id`** — stable identifier for the case
+- **`prompt`** — the realistic user request (e.g. "Review this Terraform architecture for security issues")
+- **`assertions`** — 5–7 specific, binary-gradable statements (e.g. "Response identifies the publicly accessible S3 bucket as a HIGH severity finding")
+
+Assertions are written to be unambiguous: the judge only needs to determine whether the output contains or omits a specific, concrete piece of guidance.
+
+## Prerequisites
+
+Before running evaluations, ensure:
+
+<CardGroup cols={2}>
+  <Card title="Python 3.13+ and uv" icon="python">
+    The runner requires Python 3.13 or later. Install [uv](https://docs.astral.sh/uv/) for dependency management.
+  </Card>
+  <Card title="AWS credentials with Bedrock access" icon="key">
+    Configure credentials via `aws configure`, AWS IAM Identity Center (SSO), or environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`).
+  </Card>
+  <Card title="Bedrock model access enabled" icon="toggle-on">
+    Request model access in the AWS Console → Amazon Bedrock → Model access for the models listed in `evals/config.yaml`. Claude Opus 4.8 is required by default.
+  </Card>
+  <Card title="Correct region" icon="globe">
+    Model availability varies by region. The default region is `us-east-1` — verify the models in `config.yaml` are available in your chosen region.
+  </Card>
+</CardGroup>
+
+## Effectiveness results
+
+All 11 skills are evaluated using an automated LLM-as-judge framework with paired comparison. Results below were produced with Claude Opus 4.8 as both the generation and grading model, with 16K token output limit:
+
+| Skill | Baseline | With Skill | Delta |
+|-------|:--------:|:----------:|:-----:|
+| `wa-review` | 82% | **100%** | +18% |
+| `architecture-decision-record` | 81% | **100%** | +19% |
+| `cost-optimization-review` | 93% | **100%** | +7% |
+| `migration-readiness` | 85% | **100%** | +15% |
+| `operational-excellence` | 90% | **100%** | +10% |
+| `performance-efficiency` | 90% | **100%** | +10% |
+| `reliability-improvement-plan` | 95% | **100%** | +5% |
+| `security-assessment` | 94% | **100%** | +6% |
+| `sustainability-optimization` | 85% | **100%** | +15% |
+| `wa-builder` | 61% | **94%** | +33% |
+| `wa-guardrails` | 76% | **99%** | +23% |
+| **Average** | **85%** | **99%** | **+15%** |
+
+Key findings:
+
+- **9 of 11 skills** achieve a perfect 100% score on behavioral assertions with skill context loaded
+- **Average +15% improvement** over the same model operating without skill guidance
+- Skills **never produce worse output** than baseline — they improve or match in every case
+- The largest gains appear in `wa-builder` (+33%) and `wa-guardrails` (+23%) — tasks where structured playbook guidance has the most impact on output shape
+
+The evaluation framework is fully reproducible. See [Running Evals](/evals/running-evals) to run the suite on your own models and prompts.

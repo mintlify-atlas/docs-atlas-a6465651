@@ -1,0 +1,134 @@
+---
+title: "Well-Architected Skills & Steering: AWS Best Practices for AI Agents"
+sidebarTitle: "Introduction"
+description: "Learn how Well-Architected Skills & Steering embeds AWS Well-Architected Framework guidance into 13 AI coding tools, delivering architecture reviews at code-writing time."
+---
+
+Developers don't stop to consult documentation — they ask their AI assistant. If the assistant doesn't know the AWS Well-Architected Framework, that guidance never reaches the code. Well-Architected Skills & Steering solves this by embedding WA best practices directly into the tools where development happens: in the IDE, at the moment code is being written. Instead of treating architecture reviews as a separate gate, teams get continuous, contextual guidance at every stage of development.
+
+<Note>
+  This project is provided for educational and demonstrative purposes. It is not intended for production use without additional review and testing appropriate to your environment.
+</Note>
+
+## What is this project?
+
+Well-Architected Skills & Steering is a collection of reusable skills and steering files that teach AI coding agents how to apply the [AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html). A single source of truth — one set of playbooks — works across **13 supported AI coding tools** without duplication or drift.
+
+The project follows the open [Agent Skills specification](https://agentskills.io/), making each skill self-contained, portable, and tool-agnostic. Tool-specific adapters translate the shared content into each tool's native configuration format, so you get consistent WA guidance whether you're working in Cursor, Claude Code, Kiro, or any other supported tool.
+
+### Why it exists
+
+When a developer asks their AI assistant "is this architecture reliable?" the answer is only as good as what the model knows about reliability best practices. Out of the box, most AI coding tools respond with generic advice. With Well-Architected Skills & Steering installed, the same question triggers a structured, evidence-based review against the actual AWS Well-Architected Framework questions — tied to specific files and configurations in your codebase.
+
+Key benefits:
+
+- **Catches misalignments early** — identifies High Risk Issues (HRIs) and Medium Risk Issues (MRIs) at code-writing time, not after deployment
+- **Single source of truth across 13 tools** — one set of skills and steering files, adapted to each tool's native format
+- **No AWS credentials required** — everything runs locally in your IDE; no API calls to AWS
+- **Follows an open standard** — built on the [Agent Skills specification](https://agentskills.io/), making skills portable across any compliant agent
+
+## The six AWS Well-Architected pillars
+
+Every skill and steering file in this project is organized around the six pillars of the AWS Well-Architected Framework. When you ask your AI agent for architecture guidance, it evaluates your workload against all six:
+
+| Pillar | Focus |
+|--------|-------|
+| **Operational Excellence** | Automate operations, make frequent small reversible changes, refine procedures, anticipate failure, and learn from operational events |
+| **Security** | Implement a strong identity foundation, enable traceability, apply security at all layers, automate security best practices, and protect data in transit and at rest |
+| **Reliability** | Automatically recover from failure, test recovery procedures, scale horizontally, stop guessing capacity, and manage change through automation |
+| **Performance Efficiency** | Democratize advanced technologies, go global in minutes, use serverless architectures, experiment more often, and consider mechanical sympathy |
+| **Cost Optimization** | Implement cloud financial management, adopt a consumption model, measure overall efficiency, stop spending money on undifferentiated heavy lifting, and analyze expenditure |
+| **Sustainability** | Understand your impact, establish sustainability goals, maximize utilization, anticipate and adopt more efficient offerings, use managed services, and reduce downstream impact |
+
+## Component model
+
+The project is built from five component types that work together to deliver WA guidance across all supported tools.
+
+| Component | What it does | Where it lives |
+|-----------|-------------|----------------|
+| **Skills** | Step-by-step playbooks for specific WA tasks (full review, security assessment, cost optimization, etc.). Self-contained and tool-agnostic — any AI agent can follow them. | `skills/*/SKILL.md` |
+| **Steering** | Always-on context loaded into every conversation. Orients the agent on WA pillars, design principles, and intent routing before any request is made. | `steering/*.md` |
+| **Powers** | Kiro-specific bundles that package steering, skills, and reference material into a single installable unit with keyword-based auto-activation. | `powers/*/` |
+| **Adapters** | Tool-specific configuration that translates steering and skills into each tool's native format (slash commands, rules files, guidelines, etc.). | `adapters/` |
+| **Assets** | Shared reference material — metric thresholds, investigation patterns, best-practice checklists — bundled with skills for tools that support inline references. | `assets/` |
+
+### Available skills
+
+The project ships eleven skills covering the full WA lifecycle:
+
+| Skill | Pillar(s) | Use when you need to... |
+|-------|-----------|------------------------|
+| `wa-review` | All 6 | Run a full Well-Architected review across all pillars |
+| `security-assessment` | Security | Assess IAM, detection, data protection, and incident response |
+| `reliability-improvement-plan` | Reliability | Find and eliminate single points of failure |
+| `cost-optimization-review` | Cost Optimization | Identify waste and right-sizing opportunities |
+| `performance-efficiency` | Performance Efficiency | Evaluate resource selection, scaling, and caching |
+| `sustainability-optimization` | Sustainability | Reduce carbon footprint and resource waste |
+| `operational-excellence` | Operational Excellence | Assess CI/CD, observability, and incident management |
+| `migration-readiness` | All 6 | Assess readiness to migrate a workload to AWS |
+| `architecture-decision-record` | All 6 | Document a design decision with WA pillar impact analysis |
+| `wa-builder` | All 6 | Learn WA for your project and produce visual artifacts |
+| `wa-guardrails` | All 6 | Generate preventive controls (Config rules, SCPs, CI checks) |
+
+## Supported tools
+
+Well-Architected Skills & Steering works with 13 AI coding tools out of the box. A single installation command detects which tools you use and configures all of them automatically.
+
+<CardGroup cols={3}>
+  <Card title="Kiro" icon="k">
+    Full steering + skills + Powers support with keyword auto-activation
+  </Card>
+  <Card title="Kiro CLI" icon="terminal">
+    Command-line Kiro with steering and skills support
+  </Card>
+  <Card title="Claude Code" icon="c">
+    CLAUDE.md steering with `/wa-review` and other slash commands
+  </Card>
+  <Card title="Cursor" icon="arrow-pointer">
+    `.cursor/rules` with conditional skill activation
+  </Card>
+  <Card title="Codex" icon="code">
+    AGENTS.md steering with skills directory reference
+  </Card>
+  <Card title="Windsurf" icon="wind">
+    `.windsurfrules` steering with skills directory reference
+  </Card>
+  <Card title="GitHub Copilot" icon="github">
+    Inline guidance via `copilot-instructions.md`
+  </Card>
+  <Card title="Gemini CLI" icon="g">
+    GEMINI.md steering with skills directory reference
+  </Card>
+  <Card title="Antigravity" icon="rocket">
+    `.agents/rules` steering with `.agents/skills` support
+  </Card>
+  <Card title="Junie" icon="j">
+    JetBrains IDE integration with guidelines and skills
+  </Card>
+  <Card title="Amp" icon="bolt">
+    AGENTS.md steering with `.agents/skills` support
+  </Card>
+  <Card title="OpenClaw" icon="o">
+    AGENTS.md steering with `.agents/skills` support
+  </Card>
+  <Card title="AWS DevOps Agent" icon="aws">
+    SKILL.md zip upload to AWS Agent Space
+  </Card>
+</CardGroup>
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install WA skills into your project in under a minute using npx, bootstrap scripts, or the local install script
+  </Card>
+  <Card title="How It Works" icon="gears" href="/how-it-works">
+    Understand the architecture: how skills, steering, adapters, and powers work together from a single source of truth
+  </Card>
+  <Card title="Skills Overview" icon="list" href="/skills/overview">
+    Browse all 11 available skills and learn when to use each one
+  </Card>
+  <Card title="Tool Guides" icon="wrench" href="/tools/kiro">
+    Per-tool installation instructions and tool-specific features
+  </Card>
+</CardGroup>

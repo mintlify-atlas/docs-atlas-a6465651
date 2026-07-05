@@ -1,0 +1,179 @@
+---
+title: "Skills Overview: 11 AWS Well-Architected Playbooks"
+sidebarTitle: "Overview"
+description: "Browse all 11 Well-Architected skill playbooks — step-by-step, tool-agnostic guides covering all 6 AWS Well-Architected pillars, from full reviews to guardrail generation."
+---
+
+Skills are self-contained, tool-agnostic playbooks that any AI agent can follow step-by-step. They don't depend on steering files or on each other — each skill is a complete, standalone guide that embeds AWS Well-Architected Framework best practices directly into your development workflow. Drop one into any supported AI coding tool and invoke it with a natural-language prompt.
+
+## All 11 Skills
+
+The table below maps each skill to the Well-Architected pillar(s) it covers and the scenario it's designed for.
+
+| Skill | Pillar(s) | Use when you need to... |
+|-------|-----------|-------------------------|
+| `wa-review` | All 6 | Run a full Well-Architected review |
+| `security-assessment` | Security | Assess IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Reliability | Find and eliminate single points of failure |
+| `cost-optimization-review` | Cost Optimization | Identify waste and right-sizing opportunities |
+| `performance-efficiency` | Performance Efficiency | Evaluate resource selection, scaling, and caching |
+| `sustainability-optimization` | Sustainability | Reduce carbon footprint and resource waste |
+| `operational-excellence` | Operational Excellence | Assess CI/CD, observability, incident management |
+| `migration-readiness` | All 6 | Assess readiness to migrate a workload to AWS |
+| `architecture-decision-record` | All 6 | Document a design decision with WA pillar impact |
+| `wa-builder` | All 6 | Learn WA for your project + produce visual artifacts (diagrams, decision trees, roadmaps) |
+| `wa-guardrails` | All 6 | Generate preventive controls (Config rules, SCPs, CI checks, alarms) for ongoing adherence to WA guidance |
+
+## Browse by Skill
+
+<CardGroup cols={2}>
+  <Card title="WA Review" icon="magnifying-glass" href="/skills/wa-review">
+    Full 57-question Well-Architected review across all 6 pillars. Evidence-backed findings with Eisenhower-prioritized remediation.
+  </Card>
+  <Card title="Security Assessment" icon="shield-halved" href="/skills/security-assessment">
+    Deep-dive into IAM, encryption, network protection, detection controls, and incident response preparedness.
+  </Card>
+  <Card title="Reliability Improvement Plan" icon="rotate" href="/skills/reliability-improvement-plan">
+    Identify single points of failure, assess recovery capabilities, and improve change management safety.
+  </Card>
+  <Card title="Cost Optimization Review" icon="circle-dollar-to-slot" href="/skills/cost-optimization-review">
+    Find waste, right-sizing opportunities, and pricing model mismatches across your AWS workload.
+  </Card>
+  <Card title="Performance Efficiency" icon="gauge-high" href="/skills/performance-efficiency">
+    Evaluate resource selection, caching strategies, scaling configurations, and latency monitoring.
+  </Card>
+  <Card title="Sustainability Optimization" icon="leaf" href="/skills/sustainability-optimization">
+    Reduce carbon footprint by improving compute efficiency, data lifecycle, and managed service adoption.
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Operational Excellence" icon="gears" href="/skills/operational-excellence">
+    Assess CI/CD pipelines, observability, incident management, and operational automation.
+  </Card>
+  <Card title="Migration Readiness" icon="truck-moving" href="/skills/migration-readiness">
+    7 Rs assessment with a full migration plan covering all 6 Well-Architected pillars.
+  </Card>
+  <Card title="Architecture Decision Record" icon="file-lines" href="/skills/architecture-decision-record">
+    Document design decisions with explicit Well-Architected pillar impact analysis.
+  </Card>
+  <Card title="WA Builder" icon="hammer" href="/skills/wa-builder">
+    Learn Well-Architected principles for your project and produce visual artifacts — diagrams, decision trees, roadmaps.
+  </Card>
+  <Card title="WA Guardrails" icon="lock" href="/skills/wa-guardrails">
+    Generate preventive controls: AWS Config rules, SCPs, CI/CD checks, and CloudWatch alarms.
+  </Card>
+</CardGroup>
+
+## How to Invoke Skills
+
+Skills are invoked with natural-language prompts. Each tool exposes them differently — some use slash commands, others load them as rules or instructions that the agent applies automatically.
+
+<Tabs>
+  <Tab title="Claude Code">
+    Claude Code exposes skills as slash commands. After installing the adapter, invoke any skill directly from the chat input:
+
+    ```text
+    /wa-review
+    /security-assessment
+    /reliability-improvement-plan
+    /cost-optimization-review
+    /performance-efficiency
+    ```
+
+    You can also use natural-language prompts in any conversation:
+
+    ```text
+    Run a WA review on this codebase
+    Do a security review — focus on IAM and encryption
+    Find single points of failure in our infrastructure
+    Check our cost optimization posture
+    ```
+  </Tab>
+  <Tab title="Kiro">
+    Kiro loads skills automatically from `.kiro/skills/`. Start any conversation using the skill's trigger phrases and Kiro applies the playbook without an explicit command:
+
+    ```text
+    Do a well-architected review of this project
+    Assess our security posture
+    Find reliability gaps in the infrastructure
+    Review our cost configuration
+    ```
+
+    The **Kiro Power** (recommended) bundles skills with steering and keyword-based auto-activation — mention "architecture review", "security review", or "reliability" and Kiro loads the right skill automatically.
+  </Tab>
+  <Tab title="Cursor / Windsurf / Cline">
+    Skills are loaded as rules and applied contextually. Use natural-language prompts in the chat panel:
+
+    ```text
+    WA review this project
+    Security review — check IAM policies and encryption
+    What reliability risks do you see?
+    Identify cost optimization opportunities
+    ```
+  </Tab>
+  <Tab title="Codex / Gemini CLI / Amp / OpenClaw">
+    Skills are referenced from the `skills/` directory. Invoke them with natural-language prompts:
+
+    ```text
+    Run a well-architected review
+    Assess security posture for this workload
+    Reliability improvement plan for this service
+    Cost optimization review
+    ```
+  </Tab>
+  <Tab title="GitHub Copilot">
+    Skills are embedded in `.github/copilot-instructions.md`. Use natural-language prompts in Copilot Chat:
+
+    ```text
+    @workspace Do a WA review
+    @workspace Security assessment — focus on IAM and network security
+    @workspace Find cost optimization opportunities
+    ```
+  </Tab>
+  <Tab title="AWS DevOps Agent">
+    Skills are packaged as `.zip` files and uploaded to your Agent Space via the Operator Web App. Once uploaded, invoke them naturally:
+
+    ```text
+    Run a well-architected review on this workload
+    Security assessment for the current deployment
+    ```
+  </Tab>
+</Tabs>
+
+## Skill vs Steering
+
+<Note>
+  Skills and steering serve different purposes. **Skills** are explicit playbooks — you invoke them for a specific task and the agent follows a structured, multi-step process. **Steering** is always-on context that shapes how the agent reasons about architecture in every conversation, without an explicit invocation. Most tools use both together for the best results.
+</Note>
+
+| | Skills | Steering |
+|---|---|---|
+| **When active** | When explicitly invoked | Every conversation |
+| **Scope** | One focused task | Continuous background guidance |
+| **Depth** | Deep, structured, step-by-step | Lightweight, principle-level |
+| **Output** | Formal report or plan | Inline suggestions and corrections |
+| **Tools** | All 13 supported tools | Kiro (native), others via adapters |
+
+## Effectiveness
+
+All skills are evaluated using an automated LLM-as-judge framework comparing the same prompt with and without skill context. Results with Claude Opus 4.8 (generation and grading), 16K token output:
+
+| Skill | Baseline | With Skill | Delta |
+|-------|----------|-----------|-------|
+| `wa-review` | 82% | **100%** | +18% |
+| `architecture-decision-record` | 81% | **100%** | +19% |
+| `cost-optimization-review` | 93% | **100%** | +7% |
+| `migration-readiness` | 85% | **100%** | +15% |
+| `operational-excellence` | 90% | **100%** | +10% |
+| `performance-efficiency` | 90% | **100%** | +10% |
+| `reliability-improvement-plan` | 95% | **100%** | +5% |
+| `security-assessment` | 94% | **100%** | +6% |
+| `sustainability-optimization` | 85% | **100%** | +15% |
+| `wa-builder` | 61% | **94%** | +33% |
+| `wa-guardrails` | 76% | **99%** | +23% |
+| **Average** | **85%** | **99%** | **+15%** |
+
+<Tip>
+  9 of 11 skills score 100% on behavioral assertions. The average improvement is +15% over the same model without skill guidance, and no skill ever produces worse output than the baseline.
+</Tip>

@@ -1,0 +1,180 @@
+---
+title: "cost-optimization-review: Identify AWS Cost Savings"
+sidebarTitle: "Cost Review"
+description: "Find waste, right-sizing opportunities, and pricing model improvements across your AWS workload using the Well-Architected Cost Optimization pillar."
+---
+
+The `cost-optimization-review` skill performs a focused assessment of your workload's cost efficiency. It examines IaC configurations, scaling policies, and resource provisioning in your codebase to identify waste, right-sizing opportunities, and pricing model mismatches — with every finding tied to specific file paths and relative savings estimates.
+
+<Note>
+  Use `cost-optimization-review` when you need a dedicated cost review, spend analysis, or right-sizing assessment. For a multi-pillar review that includes cost alongside security, reliability, and other pillars, use `wa-review` instead. Note that cost findings that also improve sustainability are flagged explicitly — many optimizations deliver a double benefit.
+</Note>
+
+## What the Agent Analyzes
+
+The skill runs a structured discovery across six cost domains before evaluating against WA Framework questions.
+
+<Steps>
+  <Step title="Compute Cost Discovery">
+    The agent examines all compute resource configurations:
+
+    - EC2 instance types and sizes in ASG/launch templates
+    - ECS task definitions (CPU/memory allocations)
+    - Lambda memory and timeout configurations
+    - Fargate task sizes
+    - EKS node group configurations
+    - Batch compute environments
+
+    **Automatically flagged as HIGH RISK:**
+    - Fixed-size compute (no auto-scaling) for variable workloads
+    - Over-provisioned Lambda (>1024MB for simple operations)
+    - x86 instance types where Graviton equivalents exist (cost + sustainability impact)
+    - Large instance types where smaller instances with horizontal scaling would work
+    - Dev/test environments with production-sized resources running 24/7
+    - No scheduled scaling for environments with clear off-hours
+  </Step>
+  <Step title="Storage and Data Cost Discovery">
+    The agent analyzes storage configurations:
+
+    - S3 bucket configurations (storage class, lifecycle policies, versioning)
+    - EBS volume types and sizes
+    - RDS storage configurations (type, allocated size, auto-scaling)
+    - DynamoDB capacity mode and provisioning
+    - ElastiCache node types and cluster sizes
+    - EFS configurations (throughput mode, lifecycle)
+    - Backup retention policies
+    - CloudWatch log group retention settings
+
+    **Automatically flagged as HIGH RISK:**
+    - S3 buckets without lifecycle policies (accumulating indefinitely)
+    - CloudWatch log groups with "never expire" retention
+    - EBS volumes not using gp3 (gp2 is more expensive for the same performance)
+    - Over-provisioned IOPS on EBS/RDS
+    - S3 versioning enabled without lifecycle rules to expire old versions
+    - Backup retention > 35 days without business justification
+  </Step>
+  <Step title="Data Transfer Cost Discovery">
+    The agent analyzes network and data transfer patterns:
+
+    - NAT Gateway usage (could VPC endpoints replace?)
+    - Cross-region data transfer patterns
+    - VPC endpoint configurations (or absence for S3/DynamoDB)
+    - CloudFront distributions (or absence for static content)
+    - Cross-AZ traffic patterns
+    - API Gateway configurations (REST vs HTTP API pricing)
+
+    **Automatically flagged as HIGH RISK:**
+    - S3/DynamoDB access going through NAT Gateway (VPC endpoint would be free)
+    - No CloudFront for static content delivery
+    - REST API Gateway where HTTP API would suffice (70% cheaper)
+    - Cross-region replication without business justification
+  </Step>
+  <Step title="Pricing Model Assessment">
+    The agent evaluates whether pricing models align with usage patterns:
+
+    - Steady-state compute → Savings Plans or Reserved Instances opportunity
+    - Variable/batch compute → Spot Instance opportunity
+    - Serverless vs provisioned alignment
+    - DynamoDB on-demand vs provisioned (on-demand for unpredictable, provisioned for steady)
+    - Aurora Serverless v2 vs provisioned (for variable database load)
+    - S3 Intelligent-Tiering for unknown access patterns
+  </Step>
+  <Step title="Environment and Lifecycle Management">
+    The agent examines non-production environment configurations:
+
+    - Dev/test/staging environment sizing vs production
+    - Scheduled scaling or shutdown for non-production
+    - Resource lifecycle policies (TTL on test resources)
+    - Cost allocation tags on resources
+    - AWS Budget and anomaly detection configurations
+
+    **Automatically flagged as IMPROVEMENT OPPORTUNITY:**
+    - Non-production environments running 24/7 at production scale
+    - No cost allocation tags on resources
+    - No AWS Budget or Cost Anomaly Detection configured
+    - No lifecycle policies on test/temporary resources
+  </Step>
+</Steps>
+
+## WA Framework Coverage: COST 1–11
+
+After discovery, the agent evaluates your workload against all 11 Cost Optimization pillar questions.
+
+| Question | Focus Area |
+|----------|-----------|
+| COST 1 | Cloud financial management — cost allocation tags, budget configs, anomaly detection |
+| COST 2 | Usage governance — SCPs limiting instance types, quotas, resource constraints |
+| COST 3 | Cost monitoring — Budget alarms, Cost Anomaly Detection, billing alarms |
+| COST 4 | Resource decommissioning — lifecycle policies, TTL configs, cleanup automation |
+| COST 5 | Service selection — serverless for variable loads, provisioned for steady, Spot for batch |
+| COST 6 | Resource type and size — instance types, scaling min/max, memory allocations, right-sizing |
+| COST 7 | Pricing models — Savings Plans, Reserved capacity, Spot fleet configs |
+| COST 8 | Data transfer costs — VPC endpoints, CloudFront distributions, regional placement |
+| COST 9 | Demand management — demand shaping, throttling, buffering variable workloads |
+| COST 10 | Optimization evolution — continuous improvement process, benchmark iteration |
+| COST 11 | Cost culture — team cost awareness, showback/chargeback, optimization incentives |
+
+## Output Format
+
+The skill produces a structured cost optimization report including:
+
+- **Cost Optimization Scorecard** — 1–5 score across six domains (Compute Right-Sizing, Storage Lifecycle, Data Transfer, Pricing Models, Environment Management, Cost Visibility)
+- **Critical and High Risk Findings** — with domain, title, description, evidence (file:line), cost impact, recommendation, effort, and relevant AWS services
+- **Medium and Low Risk Findings** — in condensed format
+- **Savings Summary table** — current config, optimized config, relative savings %, and effort for each finding
+- **Prioritized Remediation Plan** — Quick Wins (< 1 week), Foundation (1–4 weeks), Strategic (1–3 months)
+
+## Savings Summary Format
+
+```markdown
+## Savings Summary
+
+| Category | Finding | Current Config | Optimized Config | Relative Savings | Effort |
+|----------|---------|---------------|-----------------|-----------------|--------|
+| Storage | EBS gp2 volumes | gp2 (3 IOPS/GB) | gp3 (3000 IOPS baseline) | ~20% per volume | Low |
+| Transfer | S3 via NAT | NAT Gateway | VPC Endpoint (free) | 100% of S3 transfer costs | Low |
+| Compute | No scheduled scaling | 24/7 prod-size dev env | Scale down off-hours | ~60% dev environment cost | Low |
+| Logs | Never-expire log groups | Unlimited retention | 90-day retention | ~40% CloudWatch Logs cost | Low |
+| API | REST API Gateway | REST (full price) | HTTP API | ~70% per-request cost | Medium |
+```
+
+## How to Invoke
+
+<CodeGroup>
+```text Natural language — general
+cost review
+cost optimization review
+check our spend
+find cost savings opportunities
+```
+
+```text Natural language — focused
+find waste in our infrastructure
+right-sizing analysis — are our instances appropriately sized?
+check our pricing model alignment
+are we using Savings Plans or Reserved Instances?
+review data transfer costs
+```
+
+```text Claude Code (slash command)
+/cost-optimization-review
+```
+</CodeGroup>
+
+## Cost Optimization Trade-off Awareness
+
+<Warning>
+  Cost optimizations can introduce reliability or performance risks. The agent explicitly flags any recommendation that could degrade your availability or latency posture. For example, switching from Multi-AZ RDS to single-AZ reduces cost but introduces a SPOF — the agent will note this trade-off and recommend confirming it aligns with your availability target before making the change.
+</Warning>
+
+When the agent cannot determine actual resource utilization from IaC alone — for example, whether an instance is over-provisioned — it will report "Cannot Determine" and recommend using AWS Compute Optimizer or Cost Explorer to gather the utilization data needed to make a confident right-sizing decision.
+
+## Benchmark Results
+
+Evaluated with Claude Opus 4.8, 16K output tokens, paired comparison (same prompt with and without skill):
+
+| Baseline | With Skill | Delta |
+|----------|-----------|-------|
+| 93% | **100%** | **+7%** |
+
+The skill brings a strong baseline model to 100% on behavioral assertions covering cost domain breadth, evidence specificity, savings estimation, and trade-off analysis.

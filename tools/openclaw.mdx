@@ -1,0 +1,119 @@
+---
+title: "Install Well-Architected Skills in OpenClaw"
+sidebarTitle: "OpenClaw"
+description: "Configure OpenClaw with Well-Architected steering via AGENTS.md and skills in .agents/skills/ for step-by-step architectural playbooks."
+---
+
+OpenClaw reads `AGENTS.md` from your project root as always-on steering context and discovers structured skills from the `.agents/skills/` directory. Installing both gives OpenClaw continuous Well-Architected awareness plus 11 step-by-step assessment playbooks it can follow whenever you request a review or assessment.
+
+## What gets installed
+
+<CardGroup cols={2}>
+  <Card title="AGENTS.md" icon="file-lines">
+    Steering context that applies all six Well-Architected pillars, surfaces trade-offs explicitly, and routes structured assessment requests to the appropriate skill playbook.
+  </Card>
+  <Card title=".agents/skills/ directory" icon="folder-open">
+    Eleven skill subdirectories, each containing a `SKILL.md` playbook. OpenClaw follows these step-by-step when you invoke a specific review or improvement plan.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy files into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/openclaw/AGENTS.md ./AGENTS.md
+      mkdir -p .agents/skills
+      cp -r path/to/this-repo/skills/* .agents/skills/
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\openclaw\AGENTS.md .\AGENTS.md
+      New-Item -ItemType Directory -Force -Path .agents\skills
+      Copy-Item -Recurse path\to\this-repo\skills\* .agents\skills\
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project should now contain:
+
+    ```text
+    AGENTS.md
+    .agents/
+      skills/
+        wa-review/SKILL.md
+        security-assessment/SKILL.md
+        reliability-improvement-plan/SKILL.md
+        cost-optimization-review/SKILL.md
+        performance-efficiency/SKILL.md
+        sustainability-optimization/SKILL.md
+        operational-excellence/SKILL.md
+        migration-readiness/SKILL.md
+        architecture-decision-record/SKILL.md
+        wa-builder/SKILL.md
+        wa-guardrails/SKILL.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles directory creation and copying automatically:
+
+```bash
+./install.sh ~/my-project --tool openclaw
+```
+
+## Usage
+
+With `AGENTS.md` in place, OpenClaw automatically applies Well-Architected principles to architecture conversations. Trigger a specific skill by describing what you need:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this architecture.
+  ```
+
+  ```text Security assessment
+  Do a security assessment focusing on IAM, data protection, and incident response.
+  ```
+
+  ```text Reliability
+  Find single points of failure and create a reliability improvement plan.
+  ```
+
+  ```text Migration readiness
+  Assess migration readiness for this workload using the 7 Rs framework.
+  ```
+</CodeGroup>
+
+OpenClaw reads `AGENTS.md` at session start and loads the matching `.agents/skills/{skill-name}/SKILL.md` when a structured assessment is requested.
+
+<Tip>
+  Findings are grouped by pillar with severity labels (🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice) as directed by the steering. Start with a quick scan to locate gaps, then dive deeper into specific pillars to stay within token budgets.
+</Tip>
+
+## Available skills
+
+| Skill | What it does |
+|-------|-------------|
+| `wa-review` | Full 6-pillar review with prioritized findings report |
+| `security-assessment` | Deep-dive into IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Find SPOFs, assess recovery, produce remediation plan |
+| `cost-optimization-review` | Identify waste, right-sizing, pricing model improvements |
+| `performance-efficiency` | Resource selection, scaling, caching, optimization |
+| `sustainability-optimization` | Utilization, architecture efficiency, carbon reduction |
+| `operational-excellence` | CI/CD, observability, incident management, operational maturity |
+| `migration-readiness` | 7 Rs assessment, dependency analysis, migration plan |
+| `architecture-decision-record` | ADR with WA pillar impact analysis |
+| `wa-builder` | Learn WA for your workload and generate visual artifacts |
+| `wa-guardrails` | Generate preventive controls (Config rules, SCPs, CI checks) |

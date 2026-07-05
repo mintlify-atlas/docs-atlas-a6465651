@@ -1,0 +1,115 @@
+---
+title: "Model Benchmark: Compare Foundation Models on WA Reviews"
+sidebarTitle: "Benchmark"
+description: "Run multi-model benchmarks to compare quality, latency, throughput, and token cost across Amazon Bedrock models on Well-Architected review tasks."
+---
+
+The benchmark runner sends the same Well-Architected review prompt to multiple Amazon Bedrock models simultaneously and captures quality, latency, tokens per second, and cost per invocation side by side. Use it to choose the right model for your team's balance of depth, speed, and budget — or to track how results evolve as new models are released.
+
+## Latest benchmark results
+
+The table below reflects the most recent run against a customer-facing e-commerce Terraform architecture. Models are sorted by quality score descending.
+
+| Model | Input Tokens | Output Tokens | Latency (s) | Tokens/s | Cost | Quality |
+|-------|-------------:|--------------:|------------:|---------:|-----:|:-------:|
+| claude-sonnet-5 | 793 | 3,983 | 41.8 | 95 | $0.0621 | 5.0/5 |
+| r1 | 517 | 1,566 | 11.0 | 142 | $0.0092 | 4.8/5 |
+| nova-2-lite | 512 | 1,431 | 8.0 | 179 | $0.0002 | 4.2/5 |
+| pixtral-large-2502 | 620 | 1,565 | 19.1 | 82 | $0.0106 | 3.8/5 |
+| claude-haiku-4-5-20251001 | 587 | 4,096 | 21.6 | 190 | $0.0169 | 3.8/5 |
+| nova-pro | 549 | 1,316 | 9.1 | 145 | $0.0046 | 3.6/5 |
+| llama4-maverick-17b-instruct | 503 | 985 | 5.4 | 182 | $0.0005 | 3.5/5 |
+| llama3-3-70b-instruct | 505 | 1,133 | 9.9 | 114 | $0.0012 | 3.3/5 |
+
+<Note>
+  Last run: 2026-07-01 · Region: us-east-1 · Max tokens: 4,096 · Temperature: 0
+
+  Quality scores are graded by an LLM judge against eight criteria: coverage of all 6 WA pillars, identification of key risks (single-AZ ECS, `multi_az=false` on RDS, CloudFront `allow-all` viewer protocol), auto-scaling recommendation for flash sale peaks, single Redis node as SPOF, cost right-sizing, and actionability of recommendations.
+</Note>
+
+## Run commands
+
+<Steps>
+  <Step title="Install dependencies">
+    ```bash
+    cd evals
+    uv sync
+    ```
+  </Step>
+  <Step title="Run the benchmark">
+    <CodeGroup>
+      ```bash Quick run (no grading)
+      # Latency and token counts only — no quality grading
+      uv run python benchmark.py
+      ```
+      ```bash Full run with quality grading
+      # Adds LLM-as-judge quality scores
+      uv run python benchmark.py --grade
+      ```
+      ```bash Specific models
+      uv run python benchmark.py --models us.anthropic.claude-sonnet-5 us.amazon.nova-pro-v1:0
+      ```
+      ```bash Publish results to README
+      uv run python benchmark_report.py results/benchmark-YYYYMMDD-HHMMSS.json --update-readme
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+### Command reference
+
+| Flag | Description |
+|------|-------------|
+| `--grade` | Run an LLM-as-judge grading pass after generation to produce quality scores |
+| `--models <id> [<id> ...]` | Override the model list from `benchmark_config.yaml` |
+| `--config <path>` | Use a custom config file |
+| `--results <path>` | Write results JSON to a custom path (default: `results/benchmark-YYYYMMDD-HHMMSS.json`) |
+| `--concurrency <n>` | Max parallel model calls (default: 4) |
+
+## Configuration
+
+Model list, prompt, grading criteria, and per-model pricing are all configured in `evals/benchmark_config.yaml`:
+
+```yaml
+region: us-east-1
+max_tokens: 4096
+temperature: 0
+concurrency: 4
+
+models:
+  - us.anthropic.claude-sonnet-5
+  - us.anthropic.claude-haiku-4-5-20251001-v1:0
+  - us.amazon.nova-pro-v1:0
+  - us.amazon.nova-2-lite-v1:0
+  - us.deepseek.r1-v1:0
+  - us.meta.llama4-maverick-17b-instruct-v1:0
+  - us.meta.llama3-3-70b-instruct-v1:0
+  - us.mistral.pixtral-large-2502-v1:0
+
+grading:
+  model: us.anthropic.claude-sonnet-4-6
+  criteria:
+    - "Covers all 6 WA pillars (Operational Excellence, Security, Reliability,
+       Performance Efficiency, Cost Optimization, Sustainability)"
+    - "Identifies the single-AZ ECS deployment as a reliability risk"
+    - "Flags multi_az=false on RDS as HIGH severity"
+    - "Identifies CloudFront allow-all viewer_protocol_policy as a security issue"
+    - "Recommends auto-scaling for the ECS service to handle flash sale peaks"
+    - "Notes the single Redis node as a SPOF"
+    - "Addresses the cost concern with specific right-sizing or pricing model recommendations"
+    - "Provides actionable recommendations (not just generic advice)"
+```
+
+Add new models as they become available in Bedrock, update the `pricing` section with their per-token rates, and re-run to extend the table.
+
+## Benchmark task
+
+Every model receives the same prompt: a Well-Architected review of a customer-facing e-commerce platform defined in Terraform. The architecture includes deliberate issues planted across all six pillars — single-AZ ECS, `multi_az=false` on RDS, a single-node Redis cluster, CloudFront with `allow-all` viewer protocol, and no auto-scaling — alongside real operational context (10,000 orders/day, 5× peak traffic, a 4-hour RTO target not being met, and a $18K/month bill growing 20% QoQ).
+
+<Tip>
+  Use `uv run python list_models.py` to discover available inference profile IDs in your Bedrock region, then add them to the `models` list in `benchmark_config.yaml` to include them in your next run.
+</Tip>
+
+<Note>
+  Models that require extended thinking (Claude Sonnet 5, Claude Opus 4) are handled automatically — the runner detects them by model ID and configures `additionalModelRequestFields` with adaptive thinking. Models that don't support `temperature` (e.g., Claude Opus 4.8) are also detected and retried without that parameter.
+</Note>

@@ -1,0 +1,84 @@
+---
+title: "Automated Installation via skills.sh and Bootstrap Scripts"
+sidebarTitle: "Automated Install"
+description: "Use npx skills.sh or bootstrap curl/PowerShell scripts to install Well-Architected skills without cloning the repo. Auto-detects your AI coding tools."
+---
+
+Both methods on this page require no local clone of the repository. They download only what they need, run the installer in a temporary directory, and clean up afterwards. Both also auto-detect which AI coding tools are configured in your current project — so if you have `.cursor/`, `.claude/`, `.kiro/`, and `.junie/` present, all four tools are configured in one command.
+
+## skills.sh via npx
+
+[skills.sh](https://skills.sh) is a registry and CLI for AI agent skills that follows the open [Agent Skills specification](https://agentskills.io/). Running `npx skills add` pulls the skill package directly from the GitHub repository and installs it into your project without any global installation step.
+
+```bash
+# Auto-detect tools and install all skills
+npx skills add aws-samples/sample-well-architected-skills-and-steering
+
+# List available skills before installing
+npx skills add aws-samples/sample-well-architected-skills-and-steering --list
+
+# Install a specific skill only
+npx skills add aws-samples/sample-well-architected-skills-and-steering --skill wa-review
+
+# Install globally (applies to all projects, not just the current one)
+npx skills add aws-samples/sample-well-architected-skills-and-steering -g
+```
+
+<Tip>
+  Use `--list` first to preview all available skills and choose only the ones relevant to your project. The `wa-review` skill is the most comprehensive — it covers all six Well-Architected pillars with 307 best practices.
+</Tip>
+
+## Bootstrap script
+
+The bootstrap script downloads the repository as an archive, extracts it to a temporary directory, runs `install.sh` (or `install.ps1`) with the arguments you pass, and removes the temporary directory on exit. With no arguments it defaults to `--tool auto --force`, which detects and installs for all AI tools found in the current directory.
+
+<CodeGroup>
+```bash macOS / Linux
+# Auto-detect tools in the current directory
+curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash
+
+# Install for a specific tool
+curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash -s -- --tool kiro
+
+# Install for multiple tools
+curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash -s -- --tool kiro --tool claude-code
+
+# Install for all supported tools
+curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash -s -- --tool all
+```
+
+```powershell Windows PowerShell
+# Auto-detect tools in the current directory
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1)))
+
+# Install for a specific tool
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1))) -Tool kiro
+
+# Install for multiple tools
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1))) -Tool kiro, claude-code
+
+# Install for all supported tools
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1))) -Tool all
+```
+</CodeGroup>
+
+### What the bootstrap script does
+
+<Steps>
+  <Step title="Download the repository archive">
+    The script fetches the repository as a `.tar.gz` (bash) or `.zip` (PowerShell) from GitHub and extracts it into a uniquely named temporary directory. No `git` installation is required.
+  </Step>
+  <Step title="Auto-detect configured AI tools">
+    When no `--tool` flag is passed, the installer scans the current directory for tool configuration markers — `.cursor/`, `.claude/` or `CLAUDE.md`, `.kiro/`, `.junie/`, `.openclaw/`, `.agents/`, `.clinerules`, `.windsurfrules`, `.github/`, `GEMINI.md`, and `AGENTS.md` — and installs for every tool it finds.
+  </Step>
+  <Step title="Copy skills and steering files">
+    For each detected tool, the installer copies the appropriate adapter files (steering instructions, rules, slash commands) and all skill `SKILL.md` files into the tool's expected directories within your project.
+  </Step>
+  <Step title="Clean up">
+    The temporary directory is removed automatically via a `trap EXIT` (bash) or `finally` block (PowerShell), regardless of whether the installation succeeded or failed.
+  </Step>
+</Steps>
+
+<Warning>
+  The bootstrap script does not support symlinks. If you want to use `--symlink` mode so that future updates to the repository automatically propagate to your project without reinstalling, use the [local install script](/installation/manual) instead.
+</Warning>

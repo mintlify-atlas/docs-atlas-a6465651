@@ -1,0 +1,143 @@
+---
+title: "Manual Installation from a Local Clone"
+sidebarTitle: "Manual Install"
+description: "Install Well-Architected skills from a local clone of the repository. Supports symlinks for automatic updates and multi-tool installation in one command."
+---
+
+The local install script gives you the most control over how and where skills are installed. Because you have a full clone on disk, you can use `--symlink` mode to have your project always reflect the latest version of the repo without reinstalling, target multiple tools in a single command, uninstall cleanly, and check for newer releases. The same script (`install.sh` on macOS/Linux, `install.ps1` on Windows) handles all 13 supported tools.
+
+## Step 1 — Clone the repository
+
+```bash
+git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+cd sample-well-architected-skills-and-steering
+```
+
+## Step 2 — Run the install script
+
+<Steps>
+  <Step title="Auto-detect tools in your project">
+    Pass `--tool auto` to let the installer scan your project directory for AI tool configuration markers and install for every tool it finds.
+
+    <CodeGroup>
+    ```bash macOS / Linux
+    ./install.sh ~/my-project --tool auto
+    ```
+
+    ```powershell Windows PowerShell
+    .\install.ps1 -TargetDir C:\Projects\my-app -Tool auto
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install for a specific tool">
+    Target a single tool by name. See the [options reference](/installation/overview#installsh-options-reference) for all valid tool names.
+
+    <CodeGroup>
+    ```bash macOS / Linux
+    ./install.sh ~/my-project --tool claude-code
+    ```
+
+    ```powershell Windows PowerShell
+    .\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install for multiple tools at once">
+    Repeat `--tool` on bash or pass a comma-separated list on PowerShell to install for several tools in one run.
+
+    <CodeGroup>
+    ```bash macOS / Linux
+    ./install.sh ~/my-project --tool kiro --tool claude-code --tool cursor
+    ```
+
+    ```powershell Windows PowerShell
+    .\install.ps1 -Tool kiro, claude-code, cursor
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install for all supported tools">
+    Use `--tool all` to install adapters for every supported tool in one pass.
+
+    <CodeGroup>
+    ```bash macOS / Linux
+    ./install.sh ~/my-project --tool all
+    ```
+
+    ```powershell Windows PowerShell
+    .\install.ps1 -Tool all -Force
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install globally">
+    Use `--global` to install to your home directory. Global installs apply to all projects that don't have their own project-level configuration.
+
+    <CodeGroup>
+    ```bash macOS / Linux
+    ./install.sh --global --tool claude-code
+    ```
+
+    ```powershell Windows PowerShell
+    .\install.ps1 -Global -Tool claude-code
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Symlink mode
+
+By default the installer copies files into your project. Symlink mode creates symbolic links instead, so every time the cloned repository is updated (via `git pull`), your project immediately reflects the latest skills and steering without any reinstallation step.
+
+<CodeGroup>
+```bash macOS / Linux
+./install.sh ~/my-project --tool claude-code --symlink
+```
+
+```powershell Windows PowerShell
+.\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code -Symlink
+```
+</CodeGroup>
+
+<Warning>
+  On Windows, creating symbolic links requires either **Administrator** privileges or **Developer Mode** to be enabled in Settings → For developers. If the installer fails with a permissions error, run your PowerShell session as Administrator or enable Developer Mode and retry.
+</Warning>
+
+<Tip>
+  Symlinks are particularly useful for the `wa-review` skill, which includes 57 question reference files and 27 lens packs totalling several megabytes. With symlinks, you can `git pull` the upstream repo to pick up refreshed reference data without manually re-running the installer across all your projects.
+</Tip>
+
+## Uninstalling
+
+The `--uninstall` flag removes all Well-Architected files that were previously installed for the specified tool. It mirrors the exact set of files and directories that the installer would write, so it is safe to run even if some files were later moved or deleted manually.
+
+<CodeGroup>
+```bash macOS / Linux
+# Uninstall for a specific tool
+./install.sh ~/my-project --uninstall --tool claude-code
+
+# Uninstall for all tools
+./install.sh ~/my-project --uninstall --tool all
+```
+
+```powershell Windows PowerShell
+# Uninstall for a specific tool (re-run install.ps1 with manual removal — see note)
+.\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code
+```
+</CodeGroup>
+
+<Note>
+  The `--uninstall` flag is currently available on `install.sh` (macOS/Linux). On Windows, remove the installed files manually by deleting the directories listed in the [tool compatibility matrix](https://github.com/aws-samples/sample-well-architected-skills-and-steering#tool-compatibility-matrix) for your tool.
+</Note>
+
+## Checking for updates
+
+Run `--check-update` from anywhere — no target directory is required. The script queries the GitHub Releases API and compares the latest published version against the version embedded in the script.
+
+```bash
+./install.sh --check-update
+```
+
+If an update is available, the output shows the version delta and a link to the release. To update, run `git pull` in your clone and then re-run the installer against your projects.

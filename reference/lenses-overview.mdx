@@ -1,0 +1,125 @@
+---
+title: "AWS Well-Architected Lenses: Workload-Specific Best Practices"
+sidebarTitle: "Lenses Overview"
+description: "27 AWS Well-Architected lens packs extend the core framework with workload-specific best practices for serverless, GenAI, agentic AI, DevOps, financial services, healthcare, and more."
+---
+
+The AWS Well-Architected Framework defines six pillars and 57 standard questions that apply to every workload. Lenses extend that foundation with workload-specific best practices — additional questions, best practices, and risks that only matter when your architecture includes specific technologies or operates in a regulated industry. The `wa-review` skill ships with 27 lens packs, each sourced directly from the AWS public documentation and stored as flat reference files alongside the 57 core question files.
+
+## What lenses are
+
+A lens is a curated set of additional best practices that the reviewing agent loads on top of the standard 57-question framework when it detects — or you explicitly request — a specific workload type. Each lens is stored as a directory under `skills/wa-review/references/lenses/` and contains one reference file per lens question or topic area. The agent evaluates lens questions using the same evidence-gathering process as core framework questions: reading your code, IaC, and architecture documentation to determine compliance.
+
+## All 27 lenses
+
+| Lens | Files | Size | Loaded when |
+|------|------:|-----:|-------------|
+| Framework questions | 57 | 2.2 MB | Full review — one file per question evaluated |
+| Serverless Lens | 6 | 120 KB | Workload uses Lambda, API Gateway, or Step Functions |
+| Generative AI Lens | 29 | 368 KB | LLM, RAG, or fine-tuning workloads |
+| Agentic AI Lens | 41 | 1.2 MB | AI agent workloads |
+| Responsible AI Lens | 28 | 780 KB | AI governance and fairness requirements |
+| Hybrid Networking Lens | 30 | 480 KB | Direct Connect, VPN, or Transit Gateway |
+| Migration Lens | 6 | 76 KB | Migration planning |
+| DevOps Guidance Lens | 196 | 820 KB | CI/CD, automated governance, dev lifecycle |
+| Machine Learning Lens | 35 | 852 KB | ML lifecycle, training/deployment, data engineering |
+| Data Analytics Lens | 6 | 180 KB | Data pipelines, governance, catalogs |
+| Games Industry Lens | 32 | 316 KB | Game backends, real-time multiplayer |
+| SaaS Lens | 6 | 112 KB | Multi-tenancy, tenant isolation, onboarding |
+| Financial Services Lens | 79 | 432 KB | FSI compliance, data residency, resilience |
+| Life Sciences Lens | 56 | 468 KB | GxP, validated systems, clinical data |
+| End User Computing Lens | 69 | 372 KB | Virtual desktops/apps, streaming, identity |
+| Supply Chain Lens | 51 | 244 KB | Supply chain data, integration, traceability |
+| Video Streaming & Advertising Lens | 43 | 296 KB | Video pipelines, ad tech, monetization |
+| Telco Lens | 34 | 272 KB | Telecom, 5G/edge, OSS/BSS |
+| SAP Lens | 6 | 380 KB | SAP on AWS, S/4HANA |
+| Modern Industrial Data Technology Lens | 34 | 300 KB | Industrial data platforms, OT/IT |
+| Microsoft Workloads Lens | 23 | 368 KB | Windows Server, SQL Server, .NET on AWS |
+| Connected Mobility Lens | 6 | 284 KB | Connected vehicles, telematics, fleet data |
+| Healthcare Industry Lens | 6 | 92 KB | HIPAA, clinical data, patient privacy |
+| Container Build Lens | 6 | 76 KB | Container image builds, supply chain security |
+| High Performance Computing Lens | 23 | 104 KB | HPC clusters, parallel workloads |
+| Streaming Media Lens | 6 | 96 KB | Media streaming, live/VOD delivery |
+| IoT Lens | 59 | 369 KB | IoT devices, telemetry, edge computing |
+| Government Lens | 6 | 46 KB | Public sector, privacy-by-design, compliance |
+
+## Auto-detection
+
+The reviewing agent infers which lenses to apply by examining your workload before starting the review. Common heuristics include:
+
+<AccordionGroup>
+  <Accordion title="AI and ML workloads">
+    - References to Bedrock, SageMaker, or third-party LLM APIs → **Generative AI Lens**
+    - Agentic orchestration patterns (tool use, multi-step reasoning, LangChain, Strands) → **Agentic AI Lens**
+    - Fairness, bias, explainability, or model governance requirements → **Responsible AI Lens**
+    - SageMaker training pipelines, feature stores, or MLflow → **Machine Learning Lens**
+  </Accordion>
+  <Accordion title="Compute and infrastructure">
+    - Lambda functions, API Gateway, or Step Functions → **Serverless Lens**
+    - ECS/EKS container image build pipelines → **Container Build Lens**
+    - Slurm, AWS ParallelCluster, or HPC job schedulers → **High Performance Computing Lens**
+  </Accordion>
+  <Accordion title="Networking and connectivity">
+    - Direct Connect, Site-to-Site VPN, or Transit Gateway → **Hybrid Networking Lens**
+    - IoT Core, Greengrass, or fleet provisioning → **IoT Lens**
+  </Accordion>
+  <Accordion title="Industry workloads">
+    - HIPAA or clinical data handling → **Healthcare Industry Lens**
+    - GxP, clinical trials, or validated systems → **Life Sciences Lens**
+    - PCI-DSS, financial data residency, or audit logging → **Financial Services Lens**
+    - SAP workloads or S/4HANA → **SAP Lens**
+    - Connected vehicle or telematics data → **Connected Mobility Lens**
+    - Government or public sector compliance → **Government Lens**
+  </Accordion>
+  <Accordion title="Platform and operations">
+    - CI/CD pipelines, DevOps toolchain, or GitOps → **DevOps Guidance Lens**
+    - Multi-tenant SaaS with tenant isolation → **SaaS Lens**
+    - Media encoding, live streaming, or VOD delivery → **Streaming Media Lens** or **Video Streaming & Advertising Lens**
+    - Manufacturing, OT/IT convergence, or industrial IoT → **Modern Industrial Data Technology Lens**
+    - Windows Server, SQL Server, Active Directory, or .NET → **Microsoft Workloads Lens**
+    - Supply chain integration or traceability → **Supply Chain Lens**
+    - Game backends, matchmaking, or live ops → **Games Industry Lens**
+    - Telco infrastructure, 5G, or OSS/BSS → **Telco Lens**
+    - AppStream, WorkSpaces, or end-user virtual desktops → **End User Computing Lens**
+    - Data lakes, Glue, Athena, or data catalogs → **Data Analytics Lens**
+  </Accordion>
+</AccordionGroup>
+
+## Manually requesting a lens
+
+You can always ask for a lens explicitly, even if the agent did not auto-detect it:
+
+```text
+Evaluate our architecture against the Serverless Lens.
+```
+
+```text
+Include the Financial Services Lens in this review — we process payments.
+```
+
+```text
+Run the Agentic AI Lens only, skip the core 57 questions.
+```
+
+<Tip>
+  Lens-only reviews are a cost-effective way to check a specific domain concern without reloading all 57 core question files. Combine with pillar-scoping for even tighter token budgets — for example: "run a security-only review with the Generative AI Lens."
+</Tip>
+
+## Where the files live
+
+All lens reference data is committed to the repository and does not require any AWS credentials or network access at review time:
+
+```text
+skills/wa-review/references/
+  questions/          57 framework question files (OPS01.md … SUS06.md)
+  lenses/
+    serverless-applications/
+    generative-ai/
+    agentic-ai/
+    responsible-ai/
+    devops-guidance/
+    machine-learning/
+    … (27 lens directories total)
+```
+
+To refresh lens content when AWS documentation updates, see [Regenerating Reference Files](/reference/regenerating-data).

@@ -1,47 +1,191 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get started with Well-Architected Skills & Steering"
+sidebarTitle: "Quickstart"
+description: "Install AWS Well-Architected skills into your AI coding agent project in under a minute using npx, bootstrap scripts, or the local install script."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+Well-Architected Skills & Steering can be installed into any project without cloning the repository. Three installation methods are available depending on your workflow: the `skills.sh` npx runner (recommended), a one-liner bootstrap script, or the local install script for teams that prefer to work from a clone.
 
 ## Prerequisites
 
-Before you begin, you must have:
+- **Node.js** (for the `npx skills` method) — or just a shell/PowerShell for the bootstrap and install script methods
+- An AI coding tool already configured in your project (Kiro, Claude Code, Cursor, Codex, Windsurf, GitHub Copilot, Gemini CLI, Antigravity, Junie, Amp, OpenClaw, Cline, or AWS DevOps Agent)
+- No AWS credentials required — everything runs locally
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+---
 
-## Get started
+## Installation methods
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Method 1: Via skills.sh (npx) — recommended">
+    The fastest way to install. The `npx skills` runner auto-detects your AI tool, installs skills directly, and requires no clone.
 
     ```bash
-    npm install your-package
+    npx skills add aws-samples/sample-well-architected-skills-and-steering
     ```
+
+    This auto-detects your AI agent by looking for tool-specific directories (`.kiro/`, `.claude/`, `.cursor/`, etc.) and installs the full skill set for every detected tool.
+
+    **Useful flags:**
+
+    ```bash
+    # Preview all available skills before installing
+    npx skills add aws-samples/sample-well-architected-skills-and-steering --list
+
+    # Install a single skill (e.g., only the security assessment)
+    npx skills add aws-samples/sample-well-architected-skills-and-steering --skill wa-review
+
+    # Install globally — applies to all projects, not just the current directory
+    npx skills add aws-samples/sample-well-architected-skills-and-steering -g
+    ```
+
+    <Tip>
+      Use `--skill <name>` when you only need one skill rather than the full set. This keeps your project config lean and reduces noise in your agent's context.
+    </Tip>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Method 2: Via bootstrap script — no clone, no Node.js">
+    The bootstrap script auto-detects your AI tools, installs for all of them, and cleans up after itself. No Node.js required.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash
+      ```
+
+      ```powershell Windows (PowerShell)
+      & ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1)))
+      ```
+    </CodeGroup>
+
+    The bootstrap script detects installed tools by looking for their config directories (`.cursor/`, `.claude/`, `.kiro/`, `.junie/`, `.openclaw/`, etc.) and installs for every match it finds.
+
+    **Install for a specific tool only:**
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      curl -sL https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.sh | bash -s -- --tool kiro
+      ```
+
+      ```powershell Windows (PowerShell)
+      & ([scriptblock]::Create((irm https://raw.githubusercontent.com/aws-samples/sample-well-architected-skills-and-steering/main/bootstrap.ps1))) -Tool kiro
+      ```
+    </CodeGroup>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Method 3: Via install script — from a local clone">
+    If you prefer to inspect the files before installing, or want to use symlinks for automatic updates, clone the repository and run the install script.
 
     ```bash
-    your-cli start
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    cd sample-well-architected-skills-and-steering
     ```
+
+    Then run the install script with your target project directory:
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      # Auto-detect tools in your project
+      ./install.sh ~/my-project --tool auto
+
+      # Install for a specific tool
+      ./install.sh ~/my-project --tool claude-code
+
+      # Install for multiple tools at once
+      ./install.sh ~/my-project --tool kiro --tool claude-code --tool cursor
+
+      # Install for all supported tools
+      ./install.sh ~/my-project --tool all
+
+      # Use symlinks for automatic updates (no reinstall needed when this repo updates)
+      ./install.sh ~/my-project --tool claude-code --symlink
+
+      # Install globally — applies to all projects
+      ./install.sh --global --tool claude-code
+      ```
+
+      ```powershell Windows (PowerShell)
+      # Auto-detect tools in your project
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool auto
+
+      # Install for a specific tool
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code
+
+      # Install for multiple tools at once
+      .\install.ps1 -Tool kiro, claude-code, cursor
+
+      # Install for all supported tools
+      .\install.ps1 -Tool all -Force
+
+      # Install globally — applies to all projects
+      .\install.ps1 -Global -Tool claude-code
+      ```
+    </CodeGroup>
+
+    <Note>
+      Use `--symlink` (bash) or `-Symlink` (PowerShell) to create symbolic links instead of copies. When the upstream repository updates, your project gets the changes automatically without reinstalling. On Windows, symlinks require elevated permissions.
+    </Note>
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+---
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+## Global vs. project-level installs
+
+<Info>
+  **Project-level install** (the default) places WA skills and steering inside your project directory. They apply only to that project and are committed alongside your code — ideal when you want WA guidance scoped to a specific workload.
+
+  **Global install** (`-g`, `--global`, or `-Global`) places files in your home directory (`~/CLAUDE.md`, `~/.kiro/`, `~/.cursor/`, etc.). They apply to every project that doesn't have its own WA config, making them a good baseline for your entire development environment.
+
+  Existing files — the installer prompts before overwriting. Use `--force` to skip confirmation.
+</Info>
+
+---
+
+## Verify the installation
+
+After installing, ask your AI coding agent:
+
+```text
+What Well-Architected pillars should I consider for this architecture?
+```
+
+If configured correctly, the agent will reference all six pillars — Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability — with specific, actionable guidance rather than a generic answer.
+
+<Tip>
+  **Claude Code users:** try `/wa-review` to invoke the full Well-Architected review skill as a slash command directly from the terminal.
+
+  **Kiro users:** the steering loads automatically as soon as you open a conversation. Just start discussing your architecture — the agent applies WA principles without any explicit command.
 </Tip>
+
+---
+
+## What gets installed
+
+Depending on which tool you install for, the installer places different files into your project:
+
+| Tool | Files installed |
+|------|----------------|
+| Kiro | `.kiro/steering/well-architected.md`, `.kiro/skills/*/SKILL.md` |
+| Claude Code | `CLAUDE.md`, `.claude/commands/*.md` (slash commands) |
+| Cursor | `.cursor/rules/*.md` |
+| Codex | `AGENTS.md`, `skills/` directory |
+| Windsurf | `.windsurfrules` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Cline | `.clinerules` |
+| Gemini CLI | `GEMINI.md`, `skills/` directory |
+| Antigravity | `.agents/rules/*.md`, `.agents/skills/*/SKILL.md` |
+| Junie | `.junie/guidelines/well-architected.md`, `.junie/skills/*/SKILL.md` |
+| Amp | `AGENTS.md`, `.agents/skills/*/SKILL.md` |
+| OpenClaw | `AGENTS.md`, `.agents/skills/*/SKILL.md` |
+| AWS DevOps Agent | Packaged `.zip` files ready for upload to Agent Space |
+
+---
+
+## Next steps
+
+Once installation is verified, explore what the skills can do:
+
+- **Run a full review** — ask your agent to perform a Well-Architected review of your current project directory
+- **Scope to a pillar** — ask for a security assessment or a cost optimization review to get targeted, deep analysis
+- **Try the wa-builder skill** — ask your agent to produce an architecture diagram with WA pillar annotations
+- **Read [How It Works](/how-it-works)** — understand how skills, steering, adapters, and powers fit together

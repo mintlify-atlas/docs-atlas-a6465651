@@ -1,0 +1,116 @@
+---
+title: "Install Well-Architected Skills in OpenAI Codex"
+sidebarTitle: "Codex"
+description: "Configure OpenAI Codex with Well-Architected steering via AGENTS.md and the skills/ directory for step-by-step architectural playbooks."
+---
+
+OpenAI Codex picks up `AGENTS.md` from the root of your project and uses it as persistent context for every session. Pairing that steering file with the `skills/` directory gives Codex access to 11 structured Well-Architected playbooks it can follow step-by-step whenever you request a review or assessment.
+
+## What gets installed
+
+<CardGroup cols={2}>
+  <Card title="AGENTS.md" icon="file-lines">
+    Steering context that tells Codex to apply the six Well-Architected pillars, surface trade-offs, and route review requests to the correct skill playbook.
+  </Card>
+  <Card title="skills/ directory" icon="folder-open">
+    Eleven skill directories, each containing a `SKILL.md` playbook covering a distinct assessment area — from full WA review to cost optimization to ADRs.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy files into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/codex/AGENTS.md ./AGENTS.md
+      cp -r path/to/this-repo/skills ./skills
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\codex\AGENTS.md .\AGENTS.md
+      Copy-Item -Recurse path\to\this-repo\skills .\skills
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project root should now contain:
+
+    ```text
+    AGENTS.md
+    skills/
+      wa-review/SKILL.md
+      security-assessment/SKILL.md
+      reliability-improvement-plan/SKILL.md
+      cost-optimization-review/SKILL.md
+      performance-efficiency/SKILL.md
+      sustainability-optimization/SKILL.md
+      operational-excellence/SKILL.md
+      migration-readiness/SKILL.md
+      architecture-decision-record/SKILL.md
+      wa-builder/SKILL.md
+      wa-guardrails/SKILL.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles copying automatically:
+
+```bash
+./install.sh ~/my-project --tool codex
+```
+
+## Usage
+
+Once the files are in place, Codex reads `AGENTS.md` on startup. Trigger any skill by describing what you want in natural language:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this architecture.
+  ```
+
+  ```text Security assessment
+  Do a security assessment of the IAM roles and data handling in this codebase.
+  ```
+
+  ```text Cost review
+  Review our infrastructure costs and suggest right-sizing improvements.
+  ```
+
+  ```text ADR
+  Create an architecture decision record for the messaging approach we're using.
+  ```
+</CodeGroup>
+
+When Codex detects a review keyword, it reads the corresponding `skills/{skill-name}/SKILL.md` and follows the structured steps inside it.
+
+<Tip>
+  The `AGENTS.md` steering groups findings by pillar and applies severity labels (🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice) so output is easy to triage. Ask for a "quick review" first to identify gaps, then drill into specific pillars for deeper analysis.
+</Tip>
+
+## Available skills
+
+| Skill | What it does |
+|-------|-------------|
+| `wa-review` | Full 6-pillar review with prioritized findings report |
+| `security-assessment` | Deep-dive into IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Find SPOFs, assess recovery, produce remediation plan |
+| `cost-optimization-review` | Identify waste, right-sizing, pricing model improvements |
+| `performance-efficiency` | Resource selection, scaling, caching, optimization |
+| `sustainability-optimization` | Utilization, architecture efficiency, carbon reduction |
+| `operational-excellence` | CI/CD, observability, incident management, operational maturity |
+| `migration-readiness` | 7 Rs assessment, dependency analysis, migration plan |
+| `architecture-decision-record` | ADR with WA pillar impact analysis |
+| `wa-builder` | Learn WA for your workload and generate visual artifacts |
+| `wa-guardrails` | Generate preventive controls (Config rules, SCPs, CI checks) |

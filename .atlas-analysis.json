@@ -1,0 +1,134 @@
+{
+  "projectType": "general",
+  "projectName": "Well-Architected Skills & Steering",
+  "projectDescription": "Reusable skills and steering files that embed AWS Well-Architected Framework best practices directly into 13 AI coding tools, enabling continuous architectural guidance at the moment code is written.",
+  "theme": "aspen",
+  "primaryColor": "#8c949c",
+  "lightColor": "#252d3d",
+  "darkColor": "#cdcfd3",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "how-it-works"
+            ]
+          },
+          {
+            "group": "Installation",
+            "pages": [
+              "installation/overview",
+              "installation/tool-adapters",
+              "installation/manual"
+            ]
+          },
+          {
+            "group": "Skills",
+            "pages": [
+              "skills/overview",
+              "skills/wa-review",
+              "skills/security-assessment",
+              "skills/reliability-improvement-plan",
+              "skills/cost-optimization-review",
+              "skills/performance-efficiency",
+              "skills/sustainability-optimization",
+              "skills/operational-excellence",
+              "skills/migration-readiness",
+              "skills/architecture-decision-record",
+              "skills/wa-builder",
+              "skills/wa-guardrails"
+            ]
+          },
+          {
+            "group": "Reference Data & Lenses",
+            "pages": [
+              "reference/lenses-overview",
+              "reference/token-consumption",
+              "reference/regenerating-data"
+            ]
+          },
+          {
+            "group": "Evaluation & Benchmarks",
+            "pages": [
+              "evals/overview",
+              "evals/running-evals",
+              "evals/benchmark"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Tool Guides",
+        "groups": [
+          {
+            "group": "IDE Agents",
+            "pages": [
+              "tools/kiro",
+              "tools/claude-code",
+              "tools/cursor",
+              "tools/windsurf",
+              "tools/cline"
+            ]
+          },
+          {
+            "group": "CLI Agents",
+            "pages": [
+              "tools/codex",
+              "tools/gemini-cli",
+              "tools/amp",
+              "tools/openclaw"
+            ]
+          },
+          {
+            "group": "Platform Agents",
+            "pages": [
+              "tools/github-copilot",
+              "tools/junie",
+              "tools/antigravity",
+              "tools/devops-agent"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "11 skill playbooks covering all 6 AWS Well-Architected Framework pillars",
+    "13 supported AI coding tools with tool-specific adapters",
+    "307 best practices across 57 framework questions with progressive reference loading",
+    "27 lens packs (Serverless, GenAI, Agentic AI, DevOps Guidance, and more)",
+    "One-liner installation via npx skills.sh or bootstrap scripts (macOS, Linux, Windows)",
+    "Automated evaluation runner using Amazon Bedrock with LLM-as-judge grading",
+    "Multi-model benchmark for comparing WA review quality across foundation models",
+    "No AWS credentials or API calls required — runs locally in the IDE",
+    "Symlink support for automatic updates when the repo changes",
+    "Kiro Power for auto-activation and progressive reference loading"
+  ],
+  "publicApiSurface": [
+    "install.sh [TARGET_DIR] --tool <tool> [--symlink] [--global] [--force] [--uninstall]",
+    "install.ps1 -TargetDir <dir> -Tool <tool> [-Symlink] [-Global] [-Force]",
+    "npx skills add aws-samples/sample-well-architected-skills-and-steering [--list] [--skill <name>] [-g]",
+    "bootstrap.sh [--tool <tool>]",
+    "bootstrap.ps1 [-Tool <tool>]",
+    "uv run python evals/run.py [--skill <name>] [--parallel] [--save] [--verbose] [--list]",
+    "uv run python evals/benchmark.py [--grade] [--models <model_ids>]",
+    "uv run python evals/benchmark_report.py <results_file> [--update-readme]",
+    "uv run scripts/crawl-wa-framework.py [--pillar <pillar>] [--lens <url>] [--lens-name <name>]",
+    "Skill: wa-review (full 57-question WA framework review across 6 pillars)",
+    "Skill: security-assessment (IAM, detection, data protection, incident response)",
+    "Skill: reliability-improvement-plan (SPOFs, recovery, scaling, change management)",
+    "Skill: cost-optimization-review (waste, right-sizing, pricing models)",
+    "Skill: performance-efficiency (resource selection, scaling, caching)",
+    "Skill: sustainability-optimization (utilization, managed services, data lifecycle)",
+    "Skill: operational-excellence (CI/CD, observability, incidents, automation)",
+    "Skill: migration-readiness (7 Rs assessment with migration plan)",
+    "Skill: architecture-decision-record (WA-aligned ADRs with pillar impact)",
+    "Skill: wa-builder (learn WA + produce visual artifacts)",
+    "Skill: wa-guardrails (preventive controls: Config rules, SCPs, CI checks)"
+  ]
+}

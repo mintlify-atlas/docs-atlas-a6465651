@@ -1,0 +1,142 @@
+---
+title: "Install Well-Architected Skills in Claude Code"
+sidebarTitle: "Claude Code"
+description: "Configure Claude Code with Well-Architected steering via CLAUDE.md and slash commands for each skill — run /wa-review, /security-assessment, and more directly from the terminal."
+---
+
+Claude Code integrates Well-Architected guidance through two mechanisms: `CLAUDE.md` provides always-on steering that Claude reads at the start of every session, and `.claude/commands/` exposes each skill as a slash command you can invoke directly from the terminal. The result is structured, evidence-backed assessments available with a single command.
+
+## Available slash commands
+
+Once installed, eleven slash commands become available — one for each Well-Architected skill:
+
+<CardGroup cols={2}>
+  <Card title="/wa-review" icon="magnifying-glass">
+    Full 6-pillar Well-Architected review with evidence-backed findings and a prioritized remediation plan.
+  </Card>
+  <Card title="/security-assessment" icon="shield">
+    Deep-dive into IAM, detection controls, data protection, and incident response posture.
+  </Card>
+  <Card title="/reliability-improvement-plan" icon="rotate">
+    Identify single points of failure, recovery gaps, and scaling weaknesses.
+  </Card>
+  <Card title="/cost-optimization-review" icon="circle-dollar-to-slot">
+    Surface waste, right-sizing opportunities, and pricing model misalignments.
+  </Card>
+  <Card title="/performance-efficiency" icon="bolt">
+    Evaluate resource selection, scaling configurations, and caching strategies.
+  </Card>
+  <Card title="/sustainability-optimization" icon="leaf">
+    Assess utilization, managed service adoption, and carbon footprint reduction opportunities.
+  </Card>
+  <Card title="/operational-excellence" icon="wrench">
+    Review CI/CD maturity, observability coverage, incident management, and automation.
+  </Card>
+  <Card title="/migration-readiness" icon="truck-moving">
+    Run a 7 Rs assessment and produce a migration readiness report.
+  </Card>
+  <Card title="/architecture-decision-record" icon="file-lines">
+    Generate a WA-aligned ADR documenting pillar impact for a design decision.
+  </Card>
+  <Card title="/wa-builder" icon="diagram-project">
+    Learn Well-Architected for your workload and produce annotated diagrams, decision trees, and roadmaps.
+  </Card>
+  <Card title="/wa-guardrails" icon="lock">
+    Generate preventive controls — AWS Config rules, SCPs, CI policy checks, and CloudWatch alarms.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Copy CLAUDE.md and commands into your project">
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/claude-code/CLAUDE.md ./CLAUDE.md
+      cp -r path/to/this-repo/adapters/claude-code/commands .claude/commands
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\claude-code\CLAUDE.md .\CLAUDE.md
+      Copy-Item -Recurse path\to\this-repo\adapters\claude-code\commands .claude\commands
+      ```
+    </CodeGroup>
+
+    Or use the install script from a local clone:
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      ./install.sh ~/my-project --tool claude-code
+      ```
+
+      ```powershell Windows
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Verify the file structure">
+    After installation, your project should contain:
+
+    ```text
+    CLAUDE.md                            ← always-on WA steering
+    .claude/
+      commands/
+        wa-review.md
+        security-assessment.md
+        reliability-improvement-plan.md
+        cost-optimization-review.md
+        performance-efficiency.md
+        sustainability-optimization.md
+        operational-excellence.md
+        migration-readiness.md
+        architecture-decision-record.md
+        wa-builder.md
+        wa-guardrails.md
+    ```
+  </Step>
+
+  <Step title="Run your first review">
+    Open Claude Code in your project directory and type:
+
+    ```text
+    /wa-review
+    ```
+
+    Claude Code will launch the full structured Well-Architected review, scanning your IaC and application code for evidence before generating findings.
+  </Step>
+</Steps>
+
+## Usage examples
+
+<CodeGroup>
+  ```text Full WA review
+  /wa-review
+  ```
+
+  ```text Focused security assessment
+  /security-assessment
+  ```
+
+  ```text Generate preventive guardrails
+  /wa-guardrails
+  ```
+
+  ```text Document a design decision
+  /architecture-decision-record
+  ```
+</CodeGroup>
+
+## Global install
+
+<Tip>
+  Run the install script with `--global` to place `CLAUDE.md` in your home directory. This applies Well-Architected steering to **all** Claude Code sessions across every project, without needing per-project configuration.
+
+  ```bash
+  ./install.sh --global --tool claude-code
+  ```
+</Tip>
+
+<Note>
+  Slash commands are project-scoped (`.claude/commands/`) and are not affected by the global `CLAUDE.md`. Install commands per-project where you want structured skill invocations, and use the global `CLAUDE.md` for always-on pillar awareness everywhere.
+</Note>

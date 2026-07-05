@@ -1,0 +1,196 @@
+---
+title: "reliability-improvement-plan: Eliminate Single Points of Failure"
+sidebarTitle: "Reliability Plan"
+description: "Identify and eliminate single points of failure, improve recovery procedures, and strengthen change management using the AWS Well-Architected Reliability pillar."
+---
+
+The `reliability-improvement-plan` skill performs a focused assessment of your workload's reliability posture. It analyzes IaC, scaling configurations, and resilience patterns in your codebase to identify single points of failure, assess recovery capabilities, and produce a prioritized remediation plan tied to specific code evidence.
+
+<Note>
+  Use `reliability-improvement-plan` when you need a dedicated reliability review, SPOF analysis, DR assessment, or failover configuration check. For a multi-pillar review that includes reliability alongside security, cost, and other pillars, use `wa-review` instead.
+</Note>
+
+## What the Agent Analyzes
+
+The skill runs a structured discovery across five reliability domains before evaluating against WA Framework questions.
+
+<Steps>
+  <Step title="Fault Tolerance Discovery">
+    The agent examines infrastructure for single points of failure:
+
+    - Compute deployments (AZ distribution, instance count, ASG configs)
+    - Database configurations (Multi-AZ, read replicas, cluster topology)
+    - Cache configurations (cluster mode, replica counts, failover)
+    - Load balancer configurations (cross-zone, health checks, target groups)
+    - NAT Gateway placement (single vs per-AZ)
+    - DNS configurations (Route 53 health checks, failover routing)
+    - Queue and messaging configs (DLQ, redrive policies)
+    - Storage redundancy (S3 replication, EBS snapshots, EFS)
+
+    **Automatically flagged as HIGH RISK:**
+    - Single-AZ database deployments for production workloads
+    - Compute without auto-scaling (fixed instance count)
+    - No health checks on load-balanced targets
+    - Single NAT Gateway serving multiple AZs
+    - Stateful services without replication
+    - Missing DLQ on async invocations (Lambda, SQS, EventBridge)
+    - No circuit breaker or timeout on external service calls
+  </Step>
+  <Step title="Recovery Capability Discovery">
+    The agent analyzes backup and recovery configurations for every stateful resource:
+
+    - AWS Backup plans and rules
+    - RDS automated backup settings (retention, PITR)
+    - S3 versioning and replication rules
+    - DynamoDB PITR and backup settings
+    - EBS snapshot configurations
+    - Cross-region replication rules
+    - Disaster recovery configurations (pilot light, warm standby resources)
+
+    For each stateful resource, the agent documents backup frequency, retention, recovery point capability (RPO), estimated recovery time (RTO), and evidence of recovery testing (FIS experiments, DR runbooks).
+
+    **Automatically flagged as HIGH RISK:**
+    - Stateful resources with no backup configuration
+    - Backup retention < 7 days for production data
+    - No cross-region backup for critical data
+    - No evidence of recovery testing
+  </Step>
+  <Step title="Scaling and Capacity Discovery">
+    The agent examines scaling and capacity configurations:
+
+    - Auto Scaling Group configurations (min, max, desired, scaling policies)
+    - ECS service scaling (target tracking, step scaling)
+    - Lambda concurrency settings (reserved, provisioned)
+    - DynamoDB capacity mode (on-demand vs provisioned, auto-scaling)
+    - SQS/Kinesis throughput configurations
+    - API Gateway throttling settings
+    - Service quota usage and alarms
+
+    **Automatically flagged as HIGH RISK:**
+    - Compute without auto-scaling policies
+    - ASG with min = max (no scaling headroom)
+    - No service quota alarms
+    - Lambda without reserved concurrency on critical functions
+    - No load shedding or throttling for overload scenarios
+  </Step>
+  <Step title="Resilience Pattern Discovery">
+    The agent analyzes application code for resilience patterns:
+
+    - Retry configurations (SDK clients, custom retry logic)
+    - Timeout settings (HTTP clients, database connections, Lambda timeout)
+    - Circuit breaker implementations
+    - Fallback logic and graceful degradation patterns
+    - Idempotency handling (idempotency keys, deduplication)
+    - Health check endpoint implementations
+    - Connection pooling configurations
+
+    **Automatically flagged as HIGH RISK:**
+    - External service calls without timeouts
+    - No retry logic on SDK clients
+    - Missing idempotency on event-driven processing
+    - Health checks that don't verify actual functionality (shallow checks)
+    - Lambda timeout ≥ API Gateway timeout (will always timeout to caller)
+  </Step>
+  <Step title="Change Management Discovery">
+    The agent reviews deployment safety configurations:
+
+    - Deployment strategies (canary, blue/green, rolling, all-at-once)
+    - Health check gating on deployments
+    - Automated rollback configurations (alarm-based)
+    - Database migration strategies (backward-compatible, blue/green schema)
+    - Feature flag usage
+
+    **Automatically flagged as HIGH RISK:**
+    - All-at-once deployment to production
+    - No automated rollback on health check failure
+    - Database migrations that aren't backward-compatible
+    - No pre-production environment mirroring production topology
+  </Step>
+</Steps>
+
+## WA Framework Coverage: REL 1–13
+
+After discovery, the agent evaluates your workload against all 13 Reliability pillar questions.
+
+| Question | Focus Area |
+|----------|-----------|
+| REL 1 | Service quotas and constraints — quota alarms, SDK retry configs, throttling |
+| REL 2 | Network topology planning — subnet definitions, AZ distribution, NAT redundancy |
+| REL 3 | Adapting to demand — ASG configs, scaling policies, Lambda concurrency, DynamoDB capacity mode |
+| REL 4 | Distributed system failure prevention — retry logic, timeout configs, SQS decoupling, idempotency |
+| REL 5 | Failure mitigation — circuit breakers, fallback paths, bulkhead patterns, load shedding |
+| REL 6 | Workload monitoring — health check endpoints, alarm definitions, composite alarms, dashboards |
+| REL 7 | Demand adaptation — scaling policy metrics, scheduled scaling, predictive scaling |
+| REL 8 | Change implementation — deployment configs, health check gating, rollback trigger alarms |
+| REL 9 | Data backup — AWS Backup plans, PITR settings, replication rules, snapshot configs |
+| REL 10 | Fault isolation — AZ distribution, cell-based patterns, shuffle sharding, isolation boundaries |
+| REL 11 | Component failure withstand — multi-AZ configs, failover policies, stateless design, health-based routing |
+| REL 12 | Reliability testing — FIS experiments, failure injection code, game day runbooks, DR test scripts |
+| REL 13 | Disaster recovery planning — cross-region resources, DR automation, backup restore procedures, RTO/RPO docs |
+
+## Output Format
+
+The skill produces a structured reliability improvement plan including:
+
+- **Reliability Scorecard** — 1–5 score across six domains (Fault Tolerance, Recovery & Backup, Scaling & Capacity, Resilience Patterns, Change Management, Testing & Validation)
+- **Single Points of Failure table** — component, evidence (file:line), failure impact, current mitigation, risk level
+- **Critical and High Risk Findings** — with domain, title, description, evidence, impact assessment, recommendation, effort, and relevant AWS services
+- **Medium and Low Risk Findings** — in condensed format
+- **Prioritized Remediation Plan** — Quick Wins (< 1 week), Foundation (1–4 weeks), Strategic (1–3 months)
+- **Testing Plan** — AZ failover, database failover, load test, backup restore, deployment rollback with FIS and frequency recommendations
+
+## How to Invoke
+
+<CodeGroup>
+```text Natural language — general
+reliability review
+reliability improvement plan
+assess our reliability posture
+```
+
+```text Natural language — focused
+find single points of failure
+check our DR setup
+review failover configuration
+what happens if our primary database fails?
+check if we have proper backups configured
+```
+
+```text Claude Code (slash command)
+/reliability-improvement-plan
+```
+</CodeGroup>
+
+## Example Output: Single Points of Failure Table
+
+```markdown
+## Single Points of Failure
+
+| Component | Evidence | Failure Impact | Current Mitigation | Risk Level |
+|-----------|----------|---------------|-------------------|------------|
+| RDS PostgreSQL | database.tf:34 | Full application outage | None — single-AZ | Critical |
+| NAT Gateway | network.tf:89 | All private subnet traffic | Single instance | High |
+| ElastiCache | cache.tf:12 | Cache miss storm → DB | No replica | High |
+| Lambda DLQ | functions.tf:67 | Silent message loss | None configured | Medium |
+```
+
+## Matching Expectations to Availability Targets
+
+<Info>
+  The agent calibrates its findings based on your stated availability target. A 99.9% SLA does not require multi-region architecture — single-region multi-AZ is sufficient. A 99.99% SLA does require multi-region active-active or active-passive DR. Specify your target when invoking the skill for appropriately scoped recommendations.
+</Info>
+
+| Availability Target | Typical Requirements |
+|--------------------|---------------------|
+| 99.9% (~8.7h/year downtime) | Multi-AZ compute and databases, auto-scaling, automated rollback |
+| 99.95% (~4.4h/year downtime) | Above + chaos engineering, DR testing, connection resilience |
+| 99.99% (~52m/year downtime) | Above + multi-region active-passive DR, global load balancing |
+| 99.999% (~5m/year downtime) | Multi-region active-active, cell-based architecture, extensive FIS testing |
+
+## Benchmark Results
+
+Evaluated with Claude Opus 4.8, 16K output tokens, paired comparison (same prompt with and without skill):
+
+| Baseline | With Skill | Delta |
+|----------|-----------|-------|
+| 95% | **100%** | **+5%** |

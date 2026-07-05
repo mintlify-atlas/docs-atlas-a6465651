@@ -1,0 +1,226 @@
+---
+title: "operational-excellence: Assess CI/CD, Observability, and Incidents"
+sidebarTitle: "Operational Excellence"
+description: "Evaluate CI/CD pipelines, observability configurations, incident management processes, and automation against the AWS Well-Architected Operational Excellence pillar."
+---
+
+The `operational-excellence` skill teaches your AI coding agent to assess workloads against the AWS Well-Architected Operational Excellence pillar. It reads your actual CI/CD pipeline definitions, CloudWatch configurations, deployment strategies, and incident management patterns to produce evidence-backed findings — every gap is cited to a specific file and line number, never inferred from silence.
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="CI/CD & Deployment" icon="rocket">
+    Reviews pipeline stages, deployment strategies (canary, blue/green, rolling), rollback mechanisms, test coverage gates, and artifact promotion flows across CodePipeline, GitHub Actions, GitLab CI, and CDK Pipelines.
+  </Card>
+  <Card title="Observability" icon="eye">
+    Audits CloudWatch alarms, dashboard definitions, X-Ray and OpenTelemetry tracing configurations, structured logging libraries, correlation ID usage, and custom metric publishing.
+  </Card>
+  <Card title="Incident Management" icon="bell">
+    Inspects alert routing (SNS, PagerDuty, OpsGenie), automated remediation Lambdas, SSM runbooks, escalation configs, and health check implementations.
+  </Card>
+  <Card title="Continuous Improvement" icon="arrow-trend-up">
+    Looks for DORA metrics tracking, deployment success monitoring, operational dashboards, and cultural signals like CODEOWNERS, PR templates, and contributing guides.
+  </Card>
+</CardGroup>
+
+## WA Operational Excellence pillar coverage
+
+The skill evaluates all eleven Operational Excellence pillar questions with evidence sourced from your codebase.
+
+<Accordion title="OPS 1–3 — Organization, culture, and priorities">
+  Checks for SLO/SLI definitions, CODEOWNERS files, business metric dashboards, PR templates, and contributing guides that reflect a healthy operational culture.
+</Accordion>
+
+<Accordion title="OPS 4 — Observability">
+  Verifies structured logging with correlation IDs, distributed tracing across service boundaries, custom metrics for business-critical operations, and CloudWatch dashboards with meaningful panels.
+</Accordion>
+
+<Accordion title="OPS 5 — Reduce defects, ease remediation, improve flow">
+  Examines automated testing (unit, integration, e2e), linting and security scanning, staged deployments, and pre-deployment quality gates.
+</Accordion>
+
+<Accordion title="OPS 6 — Mitigate deployment risks">
+  Reviews CodeDeploy deployment configurations, feature flag SDK usage, automatic rollback alarm ARNs, and canary/blue-green deployment configurations.
+</Accordion>
+
+<Accordion title="OPS 7 — Operational readiness">
+  Looks for SSM runbooks, pre-deployment checklists, load testing scripts, and operational readiness review artifacts.
+</Accordion>
+
+<Accordion title="OPS 8–9 — Workload and operations health">
+  Checks for CompositeAlarm constructs, health check endpoints, DORA metrics tracking, and pipeline health dashboards.
+</Accordion>
+
+<Accordion title="OPS 10–11 — Event management and evolution">
+  Examines EventBridge rule definitions, automated remediation Lambda functions, SNS topic subscriptions, and escalation configurations.
+</Accordion>
+
+## How to invoke it
+
+Ask your AI coding agent any of the following — the skill activates automatically:
+
+<CodeGroup>
+```text Operational review
+Run an operational excellence review of this service
+```
+
+```text CI/CD assessment
+Assess our CI/CD pipeline configuration
+```
+
+```text Observability check
+Review our CloudWatch and X-Ray observability setup
+```
+
+```text Incident process
+Review our incident response and alerting configuration
+```
+</CodeGroup>
+
+## What the agent analyzes
+
+<Steps>
+  <Step title="CI/CD and deployment discovery">
+    The agent reads every pipeline definition it can find — `buildspec.yml`, `.github/workflows/`, `codepipeline-stack.ts`, `cdk-pipelines.ts`. It documents each stage, deployment strategy, rollback mechanism, and test gate with file paths and line numbers.
+  </Step>
+  <Step title="Observability discovery">
+    Every CloudWatch alarm, dashboard JSON, log group configuration, X-Ray/OTEL SDK import, and `PutMetricData` call is inventoried. The agent explicitly maps which services lack alarms and which flows lack distributed tracing.
+  </Step>
+  <Step title="Incident and event management discovery">
+    Alert routing (SNS topics, webhook integrations), SSM Automation documents, Lambda remediation functions, and EventBridge rules are catalogued alongside any runbook markdown files.
+  </Step>
+  <Step title="Checkpoint — confirm before proceeding">
+    The skill pauses and presents a summary of what was discovered across all three domains. You confirm before the WA framework evaluation begins.
+  </Step>
+  <Step title="WA framework evaluation (OPS 1–10)">
+    Each question is answered with status, evidence (file:line), gaps, and risk level using an Impact × Likelihood matrix.
+  </Step>
+  <Step title="Prioritized remediation plan">
+    Findings are organized into Quick Wins (&lt;1 week), Foundation (1–4 weeks), and Strategic (1–3 months) tracks.
+  </Step>
+</Steps>
+
+## Risk assessment matrix
+
+The skill rates every finding using Impact × Likelihood so you can triage immediately:
+
+| Impact | Likelihood | Risk Level |
+|--------|------------|------------|
+| Severe | High | **Critical** |
+| Severe | Medium / Low | **High** |
+| Moderate | High | **High** |
+| Moderate | Medium | **Medium** |
+| Moderate | Low | **Medium** |
+| Minor | High | **Medium** |
+| Minor | Medium / Low | **Low** |
+
+**Severe** = undetected outage, no rollback capability, data loss  
+**Moderate** = delayed detection, extended recovery time  
+**Minor** = inconvenience, manual workaround exists
+
+## Example output
+
+```markdown
+# Operational Excellence Assessment: payments-service
+
+## Executive Summary
+- Date: 2025-06-01
+- Packages Analyzed: infrastructure/, .github/workflows/
+- Findings: 1 Critical, 3 High, 4 Medium, 2 Low
+- Overall Maturity: 2/5 — CI/CD in place but no safe deployment strategy; observability sparse
+
+## Maturity Scorecard
+| Domain                  | Score | Key Strength                   | Key Gap                              |
+|-------------------------|-------|--------------------------------|--------------------------------------|
+| CI/CD & Deployment      | 2/5   | Automated build and unit tests | All-at-once deploy, no rollback      |
+| Observability           | 2/5   | CloudWatch logs enabled        | No alarms, no tracing, no dashboards |
+| Incident Management     | 1/5   | SNS topic exists               | No routing, no runbooks              |
+| Change Management       | 3/5   | PR review required             | No deployment approval gate          |
+| Continuous Improvement  | 2/5   | Test suite present             | No DORA metrics tracked              |
+
+## Critical Findings
+
+**OPS-001** | CI/CD | All-at-once deployment to production with no rollback
+The CodeDeploy configuration uses DeploymentType: IN_PLACE with AllAtOnce. A failed deploy
+has no automatic rollback and requires a full re-deploy to recover.
+Evidence: infrastructure/codedeploy-stack.ts:38
+Recommendation: Switch to BLUE_GREEN with automatic rollback on alarm
+AWS Services: CodeDeploy, CloudWatch Alarms
+Effort: Medium (1–2 days)
+```
+
+## Deployment strategy comparison
+
+The skill identifies your current strategy and explains the safer alternatives:
+
+<Tabs>
+  <Tab title="All-at-once (risky)">
+    ```yaml
+    # .github/workflows/deploy.yml — current (flagged by skill)
+    - name: Deploy
+      run: aws deploy create-deployment \
+        --deployment-config-name CodeDeployDefault.AllAtOnce
+    ```
+    <Warning>
+      All-at-once has no automatic rollback. A failed deployment requires a full re-deploy. The skill flags this as Critical when used in production.
+    </Warning>
+  </Tab>
+  <Tab title="Canary (recommended)">
+    ```typescript
+    // infrastructure/codedeploy-stack.ts — recommended by skill
+    new CodeDeployDeploymentGroup(this, 'PaymentsDeploymentGroup', {
+      deploymentConfig: CodeDeployDeploymentConfig.CANARY_10PERCENT_5MINUTES,
+      autoRollback: {
+        failedDeployment: true,
+        stoppedDeployment: true,
+        deploymentInAlarm: true,
+      },
+      alarms: [paymentsErrorRateAlarm, paymentsLatencyAlarm],
+    });
+    ```
+  </Tab>
+  <Tab title="Blue/Green (highest safety)">
+    ```typescript
+    // infrastructure/codedeploy-stack.ts — blue/green alternative
+    new CodeDeployDeploymentGroup(this, 'PaymentsDeploymentGroup', {
+      deploymentConfig: CodeDeployDeploymentConfig.LINEAR_10PERCENT_EVERY_1MINUTE,
+      blueGreenDeploymentConfig: {
+        terminateDeploymentOnSuccess: {
+          interval: Duration.hours(1),
+        },
+      },
+      autoRollback: { failedDeployment: true },
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Effectiveness
+
+<Note>
+  Evaluated using an automated LLM-as-judge framework with paired comparison (same prompt, with and without skill context) using Claude Opus 4.8.
+</Note>
+
+| | Baseline | With skill | Delta |
+|--|---------|-----------|-------|
+| **Score** | 90% | 100% | **+10%** |
+
+The skill raises a strong baseline because operational excellence patterns are often well-known, but it adds precision by citing specific deployment config issues and observability gaps that a bare agent frequently misses or under-specifies.
+
+## Follow-up actions the agent offers
+
+After delivering the assessment, the agent offers to:
+
+- Generate CloudWatch alarm and dashboard IaC for every gap identified
+- Create SSM runbook documents for specific failure modes found in the codebase
+- Design a self-healing architecture for recurring issues (DLQ reprocessing, auto-scaling events)
+- Implement structured logging with correlation IDs in the application code
+- Deep-dive into a specific domain: CI/CD, observability, or incident response
+
+## Related skills
+
+| Skill | When to use instead |
+|-------|---------------------|
+| [`wa-review`](/skills/wa-review) | Run a full cross-pillar review including all five other pillars alongside Operational Excellence |
+| [`wa-guardrails`](/skills/wa-guardrails) | Turn the findings from this assessment into preventive CI/CD checks and Config rules |
+| [`reliability-improvement-plan`](/skills/reliability-improvement-plan) | Focus specifically on fault tolerance, recovery, and single points of failure |

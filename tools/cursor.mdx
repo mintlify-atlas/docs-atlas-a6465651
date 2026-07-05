@@ -1,0 +1,96 @@
+---
+title: "Install Well-Architected Skills in Cursor"
+sidebarTitle: "Cursor"
+description: "Configure Cursor with AWS Well-Architected rules files in .cursor/rules/ for always-on architecture guidance and conditional wa-review activation during reviews."
+---
+
+Cursor integrates Well-Architected guidance through `.cursor/rules/*.md` files — a native Cursor mechanism for injecting persistent instructions into the AI assistant. Two rules files are provided: `well-architected.md` applies always-on WA principles to every conversation, while `wa-review.md` activates conditionally when you request an architecture review, running the full structured assessment process.
+
+## What gets installed
+
+| File | Activation | What it does |
+|---|---|---|
+| `.cursor/rules/well-architected.md` | Always on (`alwaysApply: true`) | Six pillars, design principles, trade-off guidance, and response format |
+| `.cursor/rules/wa-review.md` | Conditional | Full multi-step review process: scope, discovery, pillar evaluation, risk assessment, report |
+
+## Installation
+
+<Steps>
+  <Step title="Copy the rules directory into your project">
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp -r path/to/this-repo/adapters/cursor/rules .cursor/rules
+      ```
+
+      ```powershell Windows
+      Copy-Item -Recurse path\to\this-repo\adapters\cursor\rules .cursor\rules
+      ```
+    </CodeGroup>
+
+    Or use the install script from a local clone:
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      ./install.sh ~/my-project --tool cursor
+      ```
+
+      ```powershell Windows
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool cursor
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Verify the file structure">
+    After installation your project should contain:
+
+    ```text
+    .cursor/
+      rules/
+        well-architected.md    ← always-on WA principles
+        wa-review.md           ← conditional review activation
+    ```
+  </Step>
+
+  <Step title="Test the integration">
+    Open Cursor in your project and ask a design question. The agent should respond with pillar-aware guidance, using severity labels and concrete next steps.
+
+    ```text
+    What Well-Architected pillars should I consider for this architecture?
+    ```
+  </Step>
+</Steps>
+
+## How the rules activate
+
+<CardGroup cols={2}>
+  <Card title="well-architected.md" icon="circle-check">
+    **Always active.** The rule carries `alwaysApply: true` in its frontmatter, so Cursor injects it into every conversation automatically. You get six-pillar awareness, design principle reminders, and trade-off acknowledgement without any extra prompting.
+  </Card>
+  <Card title="wa-review.md" icon="magnifying-glass">
+    **Conditionally active.** Cursor applies this rule when the conversation matches its description — architecture review, WA assessment, or architecture health check requests. It walks through scope definition, infrastructure discovery, per-pillar evaluation, and report generation.
+  </Card>
+</CardGroup>
+
+## Usage
+
+To trigger a full structured Well-Architected review, mention it in your message:
+
+```text
+Run a Well-Architected review of this codebase.
+```
+
+```text
+Do a WA review focused on security and reliability.
+```
+
+```text
+Architecture review — we're considering this design for a serverless workload.
+```
+
+<Tip>
+  Cursor's conditional rule picks up phrases like "architecture review", "WA review", and "architecture health check". For a quick assessment of a specific area, ask about a single pillar — for example, "how is our security posture?" — and `well-architected.md` alone will guide the response with the relevant best practices.
+</Tip>
+
+<Note>
+  Every finding produced by `wa-review.md` is evidence-backed: the rule instructs the agent to cite specific file paths and line numbers. If code is unavailable, findings are marked "Cannot Determine" rather than generating generic recommendations.
+</Note>

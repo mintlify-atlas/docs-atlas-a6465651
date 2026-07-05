@@ -1,0 +1,125 @@
+---
+title: "Regenerating Reference Files from AWS Documentation"
+sidebarTitle: "Regenerating Data"
+description: "Refresh the 57 WA framework question files and 27 lens packs by crawling AWS public documentation using the included Python crawl script."
+---
+
+The `wa-review` skill's reference files — 57 framework question files and 27 lens packs — are committed directly to the repository. You do not need to regenerate them under normal circumstances. If AWS updates their Well-Architected documentation and you want to pick up new best practices, revised guidance, or newly published lenses, the included `scripts/crawl-wa-framework.py` script automates the process.
+
+## When to regenerate
+
+Reference files should be refreshed when:
+
+- AWS publishes a major update to the Well-Architected Framework (typically once or twice a year)
+- A new lens is published that isn't yet included in the repository
+- An existing lens adds questions or best practices you want to capture
+- You want to verify your local copy matches the current AWS documentation
+
+<Note>
+  For most users, the committed reference files are current enough. AWS WA documentation updates are relatively infrequent. Check the `skills/wa-review/references/` directory's git history to see when files were last refreshed.
+</Note>
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install Python 3.13+">
+    The crawl script requires Python 3.13 or later. Check your version:
+
+    ```bash
+    python --version
+    ```
+  </Step>
+  <Step title="Install uv">
+    The project uses [uv](https://docs.astral.sh/uv/) for dependency management. Install it if you haven't:
+
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+  </Step>
+</Steps>
+
+## Crawl commands
+
+### Regenerate framework questions
+
+Regenerate all 57 question files across the six pillars:
+
+```bash
+uv run scripts/crawl-wa-framework.py
+```
+
+Regenerate a single pillar only:
+
+```bash
+uv run scripts/crawl-wa-framework.py --pillar security
+```
+
+Available `--pillar` values:
+
+| Value | Pillar |
+|-------|--------|
+| `operational-excellence` | Operational Excellence |
+| `security` | Security |
+| `reliability` | Reliability |
+| `performance-efficiency` | Performance Efficiency |
+| `cost-optimization` | Cost Optimization |
+| `sustainability` | Sustainability |
+
+### Regenerate or add a lens
+
+Pass the URL of the lens welcome page to crawl it:
+
+```bash
+# Standard lenses (hyphen-separated best-practice IDs, e.g. SRV-1)
+uv run scripts/crawl-wa-framework.py \
+  --lens https://docs.aws.amazon.com/wellarchitected/latest/serverless-applications-lens/welcome.html
+```
+
+Some lenses use a dotted best-practice ID format (e.g., `REL.1`, `OPS.2`). For these, also pass `--lens-name` to set the output directory name explicitly:
+
+```bash
+# DevOps Guidance uses dotted IDs — requires explicit --lens-name
+uv run scripts/crawl-wa-framework.py \
+  --lens https://docs.aws.amazon.com/wellarchitected/latest/devops-guidance/devops-guidance.html \
+  --lens-name devops-guidance
+```
+
+<CodeGroup>
+  ```bash Common lenses
+  # Serverless Applications Lens
+  uv run scripts/crawl-wa-framework.py \
+    --lens https://docs.aws.amazon.com/wellarchitected/latest/serverless-applications-lens/welcome.html
+
+  # Generative AI Lens
+  uv run scripts/crawl-wa-framework.py \
+    --lens https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/generative-ai-lens.html
+
+  # Machine Learning Lens
+  uv run scripts/crawl-wa-framework.py \
+    --lens https://docs.aws.amazon.com/wellarchitected/latest/machine-learning-lens/machine-learning-lens.html
+  ```
+  ```bash Lenses requiring --lens-name
+  # DevOps Guidance
+  uv run scripts/crawl-wa-framework.py \
+    --lens https://docs.aws.amazon.com/wellarchitected/latest/devops-guidance/devops-guidance.html \
+    --lens-name devops-guidance
+
+  # Financial Services Lens
+  uv run scripts/crawl-wa-framework.py \
+    --lens https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/welcome.html \
+    --lens-name financial-services
+  ```
+</CodeGroup>
+
+## Where files are written
+
+| Content | Output path |
+|---------|-------------|
+| Framework question files | `skills/wa-review/references/questions/` |
+| Lens reference files | `skills/wa-review/references/lenses/<lens-name>/` |
+
+After regeneration, commit the updated files to your fork or branch. The reference files are plain Markdown — you can review the diff to verify what changed before committing.
+
+<Warning>
+  The crawl script fetches from AWS public documentation. Depending on your network and the size of the lens, a full framework crawl may take several minutes. Lens crawls are typically faster — most complete in under a minute.
+</Warning>

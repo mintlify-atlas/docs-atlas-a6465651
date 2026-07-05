@@ -1,0 +1,104 @@
+---
+title: "Install Well-Architected Skills in Cline"
+sidebarTitle: "Cline"
+description: "Configure Cline with AWS Well-Architected guidance via .clinerules for always-on architectural best practice awareness and intent routing to specific skill playbooks."
+---
+
+Cline integrates Well-Architected guidance through a `.clinerules` file — Cline's native mechanism for persistent agent instructions. The file establishes your AI assistant as an AWS Well-Architected advisor, applies all six pillars to every architecture conversation, and routes structured assessment requests to the appropriate skill playbook in the `skills/` directory.
+
+## What gets installed
+
+```text
+.clinerules    ← always-on WA steering and skill routing
+```
+
+The `.clinerules` file contains:
+
+- **Role definition** — sets the agent as an AWS Well-Architected advisor
+- **Six-pillar definitions** — Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability
+- **Design principles** — managed services preference, failure design, least-privilege access, IaC, observability
+- **Trade-off guidance** — explicit acknowledgement of security/latency, cost/availability, and portability trade-offs
+- **Skill routing** — references the `skills/` directory so Cline can follow step-by-step playbooks on demand
+
+## Installation
+
+<Steps>
+  <Step title="Copy .clinerules into your project root">
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/cline/.clinerules ./.clinerules
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\cline\.clinerules .\.clinerules
+      ```
+    </CodeGroup>
+
+    Or use the install script from a local clone:
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      ./install.sh ~/my-project --tool cline
+      ```
+
+      ```powershell Windows
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool cline
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Verify the file is in place">
+    Confirm `.clinerules` exists at the root of your project:
+
+    ```bash
+    ls -la .clinerules
+    ```
+  </Step>
+
+  <Step title="Test the integration">
+    Open a Cline conversation in your project directory and ask a design question. The agent should apply WA principles and reference specific pillars.
+
+    ```text
+    What Well-Architected pillars should I consider for this architecture?
+    ```
+  </Step>
+</Steps>
+
+## Usage
+
+Cline loads `.clinerules` automatically at the start of every session, so WA principles are active immediately. For structured deep-dive assessments, ask Cline to follow the relevant skill playbook:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this codebase.
+  ```
+
+  ```text Security assessment
+  Do a security assessment — follow the security-assessment skill.
+  ```
+
+  ```text Architecture decision record
+  Create an architecture decision record for this design choice.
+  ```
+
+  ```text Cost review
+  Identify cost optimization opportunities in this architecture.
+  ```
+</CodeGroup>
+
+<Tip>
+  To get the full structured playbook experience, copy the `skills/` directory alongside `.clinerules`. The skill routing in `.clinerules` references `skills/{skill-name}/SKILL.md`, so Cline can read and follow the step-by-step instructions when asked.
+
+  ```bash
+  cp path/to/this-repo/adapters/cline/.clinerules ./.clinerules
+  cp -r path/to/this-repo/skills ./skills
+  ```
+</Tip>
+
+<Note>
+  `.clinerules` is project-scoped and applies to all Cline conversations opened in that workspace. If you want WA guidance across all projects, use the global install flag:
+
+  ```bash
+  ./install.sh --global --tool cline
+  ```
+</Note>

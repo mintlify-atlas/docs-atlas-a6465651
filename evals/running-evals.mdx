@@ -1,0 +1,153 @@
+---
+title: "Running Well-Architected Skill Evaluations"
+sidebarTitle: "Running Evals"
+description: "Set up and run automated skill evaluations against Amazon Bedrock models to measure skill effectiveness, compare baselines, and save results for tracking."
+---
+
+The evaluation runner generates paired responses — baseline and with-skill — for every test case in a skill's `evals/evals.json`, then grades each assertion using an LLM-as-judge. This page walks through setup and the full set of run options.
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">
+    Navigate to the `evals/` directory and sync the project's dependencies with `uv`:
+
+    ```bash
+    cd evals
+    uv sync
+    ```
+
+    This installs `boto3` and `pyyaml` into an isolated virtual environment. No other dependencies are required.
+  </Step>
+  <Step title="Configure AWS credentials">
+    The runner calls Amazon Bedrock via `boto3`. Any standard credential chain works:
+
+    <Tabs>
+      <Tab title="aws configure">
+        ```bash
+        aws configure
+        ```
+        Prompts for Access Key ID, Secret Access Key, region, and output format.
+      </Tab>
+      <Tab title="SSO (IAM Identity Center)">
+        ```bash
+        aws sso login --profile your-profile
+        export AWS_PROFILE=your-profile
+        ```
+      </Tab>
+      <Tab title="Environment variables">
+        ```bash
+        export AWS_ACCESS_KEY_ID=AKIA...
+        export AWS_SECRET_ACCESS_KEY=...
+        export AWS_SESSION_TOKEN=...      # if using temporary credentials
+        export AWS_DEFAULT_REGION=us-east-1
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Verify Bedrock model access">
+    Open the AWS Console → **Amazon Bedrock** → **Model access** and confirm that model access is granted for the models listed in `evals/config.yaml` in your target region. By default, this means **Claude Opus 4.8** (`us.anthropic.claude-opus-4-8`) in `us-east-1`.
+  </Step>
+</Steps>
+
+## Running evaluations
+
+<CodeGroup>
+  ```bash List available skills
+  uv run python run.py --list
+  ```
+  ```bash Single skill (verbose)
+  uv run python run.py --skill wa-review --verbose
+  ```
+  ```bash All skills in parallel
+  uv run python run.py --parallel --verbose
+  ```
+  ```bash Save results for tracking
+  uv run python run.py --parallel --save
+  ```
+</CodeGroup>
+
+### Command reference
+
+| Flag | Description |
+|------|-------------|
+| `--skill <name>` | Evaluate a single skill. Omit to run all skills. |
+| `--verbose` / `-v` | Show per-assertion grading detail (pass/fail icons for every assertion in every case). |
+| `--parallel` / `-p` | Run eval cases within each skill in parallel. Roughly 3× faster wall-clock time. |
+| `--save` | Write results JSON to `evals/results/` for historical tracking. |
+| `--list` | Print available skill names and exit. |
+| `--model <id>` | Override the generation model without editing `config.yaml`. |
+| `--grading-model <id>` | Override the grading model. |
+| `--runs <n>` | Run each skill `n` times for statistical averaging. |
+
+## Configuration
+
+The `evals/config.yaml` file controls which Bedrock models are used and where calls are made:
+
+```yaml
+provider: bedrock
+region: us-east-1
+generation_model: us.anthropic.claude-opus-4-8
+grading_model: us.anthropic.claude-opus-4-8
+max_tokens: 16384
+```
+
+| Field | Purpose |
+|-------|---------|
+| `region` | AWS region for all Bedrock API calls |
+| `generation_model` | Model used to generate baseline and with-skill responses |
+| `grading_model` | Model used as LLM-as-judge to grade assertions — keep this a strong model |
+| `max_tokens` | Maximum output tokens per generation call (16384 = full reports) |
+
+## How it works
+
+For each test case in a skill's `evals.json`, the runner:
+
+1. Sends the prompt to Bedrock **without** skill context → **baseline response**
+2. Sends the same prompt with `SKILL.md` prepended to the system prompt → **with-skill response**
+3. Grades each assertion against the baseline response (PASS/FAIL)
+4. Grades each assertion against the with-skill response (PASS/FAIL)
+5. Computes a percentage score for each condition and the delta
+
+The final report shows baseline score, with-skill score, and delta for each skill — quantifying the value the skill adds.
+
+## Estimated cost per run
+
+| Scope | Generation calls | Grading calls | Estimated cost |
+|-------|:----------------:|:-------------:|:--------------:|
+| Single skill (3 cases) | 6 (Opus) | 6 (Opus) | ~$1.50–$2.50 |
+| All 11 skills (33 cases) | 66 (Opus) | 66 (Opus) | ~$15–$25 |
+
+Cost assumes ~1K input tokens and ~8K output tokens per generation call, and ~9K input / ~500 output per grading call. Actual cost depends on response length and Bedrock pricing in your region.
+
+<Tip>
+  Use `--parallel` to cut wall-clock time by ~3×. Cost is the same — parallelism doesn't reduce token consumption, it just runs cases concurrently within a skill.
+</Tip>
+
+## Experimenting with other models
+
+The eval runner works with any model available in your Bedrock region. To try a different generation model without editing the config file:
+
+```bash
+# Try Amazon Nova Pro
+uv run python run.py --skill wa-review --model us.amazon.nova-pro-v1:0 --verbose
+
+# Try Claude Sonnet
+uv run python run.py --skill wa-review --model us.anthropic.claude-sonnet-4-6 --verbose
+```
+
+To see which models are available in your region, use the discovery utility:
+
+```bash
+uv run python list_models.py
+```
+
+Then update `generation_model` in `config.yaml` to change the default for all runs. The grading model should remain a strong model (Claude Opus or Sonnet) for reliable assertion grading.
+
+<Note>
+  Claude Opus 4.8 does not support the `temperature` inference parameter. The runner detects this automatically and retries without the parameter — no configuration change is needed.
+</Note>
+
+<Warning>
+  On Windows, ensure AWS credentials are configured via `aws configure` or environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`). If using AWS IAM Identity Center (SSO), run `aws sso login --profile your-profile` before running evaluations.
+</Warning>

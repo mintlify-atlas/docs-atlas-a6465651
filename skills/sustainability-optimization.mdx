@@ -1,0 +1,179 @@
+---
+title: "sustainability-optimization: Reduce AWS Carbon Footprint"
+sidebarTitle: "Sustainability"
+description: "Reduce carbon footprint, improve resource utilization, choose managed services, and optimize data lifecycle using the AWS Well-Architected Sustainability pillar."
+---
+
+The `sustainability-optimization` skill teaches your AI coding agent to assess workloads against the AWS Well-Architected Sustainability pillar. It examines actual code and infrastructure-as-code to find resource waste, inefficient compute choices, missing data lifecycle policies, and architectural patterns that consume more energy than necessary — then produces a prioritized remediation plan with concrete efficiency gains.
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="Compute Efficiency" icon="microchip">
+    Identifies x86 workloads where Graviton/arm64 applies, always-on resources that could scale to zero, and non-production environments running 24/7 at full capacity.
+  </Card>
+  <Card title="Data & Storage Lifecycle" icon="database">
+    Flags S3 buckets without lifecycle policies, CloudWatch logs with unlimited retention, DynamoDB tables missing TTL, and uncompressed data stores.
+  </Card>
+  <Card title="Architecture Patterns" icon="sitemap">
+    Finds polling patterns that could be event-driven, chatty APIs causing excess network round-trips, and self-managed infrastructure where managed equivalents offer better utilization.
+  </Card>
+  <Card title="Development Practices" icon="code">
+    Reviews Docker image sizes, CI/CD caching, test environment teardown policies, and artifact retention to reduce build and delivery waste.
+  </Card>
+</CardGroup>
+
+## WA Sustainability pillar coverage
+
+The skill evaluates all six Sustainability pillar questions with evidence sourced from your codebase.
+
+<Accordion title="SUS 1 — Region selection">
+  Reviews region configurations and documentation for carbon-intensity rationale. Flags deployments in high-carbon regions where latency requirements don't justify the placement.
+</Accordion>
+
+<Accordion title="SUS 2 — User behavior patterns">
+  Examines auto-scaling configurations, scheduled scaling rules, and event-driven architecture patterns to verify resources can scale to zero during idle periods.
+</Accordion>
+
+<Accordion title="SUS 3 — Software and architecture patterns">
+  Checks for managed service adoption, asynchronous processing, batch operations, and caching layers that eliminate redundant computation.
+</Accordion>
+
+<Accordion title="SUS 4 — Data access and usage patterns">
+  Audits S3 lifecycle policies, Intelligent-Tiering adoption, compression configurations, TTL settings on DynamoDB tables, and backup retention policies.
+</Accordion>
+
+<Accordion title="SUS 5 — Hardware management and usage">
+  Reports Graviton/arm64 adoption rate across Lambda, EC2, Fargate, and ECS. Flags older instance generations (m4, t2) and provisioned concurrency on non-latency-critical Lambdas.
+</Accordion>
+
+<Accordion title="SUS 6 — Development and deployment processes">
+  Reviews multi-stage Docker builds, CI/CD layer caching, incremental build configurations, and test environment auto-teardown policies.
+</Accordion>
+
+## How to invoke it
+
+Ask your AI coding agent any of the following — the skill activates automatically:
+
+<CodeGroup>
+```text Sustainability review
+Run a sustainability review of this codebase
+```
+
+```text Carbon footprint
+How can we reduce our carbon footprint in this service?
+```
+
+```text Energy efficiency
+Check our Lambda and EC2 configurations for energy efficiency
+```
+
+```text Graviton migration
+Which of our resources can be migrated to Graviton?
+```
+</CodeGroup>
+
+## What the agent analyzes
+
+<Steps>
+  <Step title="Compute efficiency discovery">
+    The agent scans instance type selections, Lambda architecture settings (`arm64` vs `x86_64`), auto-scaling min/max values, and whether provisioned concurrency is justified. It documents every compute resource with its file path and line number.
+  </Step>
+  <Step title="Data and storage lifecycle">
+    Every S3 bucket, DynamoDB table, CloudWatch log group, and backup policy is inspected. Missing lifecycle rules, unlimited retention, and absent TTL configurations are flagged with direct code references.
+  </Step>
+  <Step title="Architecture efficiency">
+    The agent identifies polling loops, synchronous chains that could be async, individual API calls where batch operations exist, and self-managed infrastructure (Kafka, Redis) where managed equivalents (MSK, ElastiCache) provide shared-infrastructure efficiency.
+  </Step>
+  <Step title="Checkpoint — confirm before proceeding">
+    The skill pauses and summarizes its discoveries before evaluating findings against the WA framework questions. You confirm before the assessment continues.
+  </Step>
+  <Step title="WA framework evaluation">
+    Each of SUS 1–6 is scored with status, evidence (file:line), gaps, and risk level.
+  </Step>
+  <Step title="Prioritized remediation plan">
+    Findings are organized into Quick Wins (&lt;1 week), Foundation (1–4 weeks), and Strategic (1–3 months) tracks, each showing resource impact and implementation effort.
+  </Step>
+</Steps>
+
+## Example output
+
+The skill produces a structured Sustainability Assessment report:
+
+```markdown
+# Sustainability Assessment: payments-service
+
+## Executive Summary
+- Date: 2025-06-01
+- Packages Analyzed: infrastructure/, src/
+- Findings: 3 High Impact, 5 Medium Impact, 4 Low Impact
+- Overall Sustainability Maturity: 2/5 — Graviton adoption absent; no lifecycle policies
+- Key Opportunities: Migrate Lambda to arm64, add S3 lifecycle rules, enable scheduled scaling
+
+## Sustainability Scorecard
+| Domain                   | Score | Key Strength              | Key Gap                          |
+|--------------------------|-------|---------------------------|----------------------------------|
+| Compute Efficiency       | 2/5   | Lambda used for async jobs | All functions on x86_64          |
+| Data & Storage           | 1/5   | S3 versioning enabled     | No lifecycle rules on any bucket |
+| Architecture Efficiency  | 3/5   | SQS used for decoupling   | Two polling loops remain         |
+| Development & Deployment | 2/5   | Docker multi-stage builds | No CI layer caching              |
+| Hardware & Region        | 2/5   | us-east-1 (lower carbon)  | m4.large instances still in use  |
+
+## High Impact Findings
+**SUS-001** | Compute | Lambda functions on x86_64
+All 14 Lambda functions use x86_64. Switching to arm64 reduces energy per invocation by
+up to 34% while improving price-performance.
+Evidence: infrastructure/lambda-stack.ts:42, :67, :91
+Recommendation: Add `architecture: lambda.Architecture.ARM_64` to each FunctionProps
+Effort: Low (configuration change)
+```
+
+## Resource efficiency opportunities
+
+The report includes a dedicated table mapping current configurations to optimized alternatives:
+
+```markdown
+| Resource          | Current Config         | Optimized Config              | Efficiency Gain       | Evidence                  |
+|-------------------|------------------------|-------------------------------|-----------------------|---------------------------|
+| ProcessOrderFn    | x86_64, 512 MB         | arm64, 512 MB                 | ~34% energy reduction | lambda-stack.ts:42        |
+| orders-raw bucket | No lifecycle policy    | IA after 30d, Glacier 90d     | Eliminates cold data  | s3-stack.ts:28            |
+| audit-logs group  | Retention: never       | Retention: 90 days            | Log storage reduced   | cloudwatch-stack.ts:15    |
+| api-cache cluster | r6g (x86)              | r7g (Graviton3)               | ~20% better perf/watt | elasticache-stack.ts:33   |
+```
+
+## Effectiveness
+
+<Note>
+  Evaluated using an automated LLM-as-judge framework with paired comparison (same prompt, with and without skill context) using Claude Opus 4.8.
+</Note>
+
+| | Baseline | With skill | Delta |
+|--|---------|-----------|-------|
+| **Score** | 85% | 100% | **+15%** |
+
+The skill is particularly effective at surfacing missing data lifecycle policies and Graviton migration opportunities that a bare agent typically overlooks when no specific sustainability prompt is given.
+
+## AWS tools referenced in the output
+
+<CardGroup cols={2}>
+  <Card title="Customer Carbon Footprint Tool" icon="leaf">
+    Track your AWS emissions directly in the AWS Management Console — the skill recommends enabling this to establish a baseline.
+  </Card>
+  <Card title="AWS Compute Optimizer" icon="chart-line">
+    Right-size recommendations with explicit Graviton suggestions. The skill flags which resources should be submitted to Compute Optimizer for runtime analysis.
+  </Card>
+  <Card title="S3 Storage Lens" icon="magnifying-glass">
+    Storage efficiency insights and access pattern analysis — recommended for buckets where Intelligent-Tiering decision cannot be made from code alone.
+  </Card>
+  <Card title="AWS Trusted Advisor" icon="shield-check">
+    Idle resource detection for runtime waste not visible in IaC. The skill notes when Trusted Advisor data would sharpen a finding.
+  </Card>
+</CardGroup>
+
+## Related skills
+
+| Skill | When to use instead |
+|-------|---------------------|
+| [`cost-optimization-review`](/skills/cost-optimization-review) | Focus on spend reduction, right-sizing, and pricing model changes rather than carbon footprint |
+| [`performance-efficiency`](/skills/performance-efficiency) | Focus on latency, throughput, and resource selection for performance targets |
+| [`wa-review`](/skills/wa-review) | Run a full cross-pillar review including Sustainability alongside all five other pillars |

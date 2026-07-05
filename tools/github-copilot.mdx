@@ -1,0 +1,102 @@
+---
+title: "Install Well-Architected Skills in GitHub Copilot"
+sidebarTitle: "GitHub Copilot"
+description: "Configure GitHub Copilot with AWS Well-Architected guidance via .github/copilot-instructions.md for always-on architectural best practice awareness."
+---
+
+GitHub Copilot picks up repository-level instructions from `.github/copilot-instructions.md` and applies them automatically across all Copilot interactions in that project. Copying the Well-Architected instructions file into your repository gives Copilot always-on awareness of all six WA pillars, design principles, and trade-off guidance — no additional setup required.
+
+<Note>
+  GitHub Copilot does not have a separate skill or playbook mechanism. All Well-Architected guidance is embedded directly in `copilot-instructions.md` rather than being split across steering and skill files. This means the full WA context is always active, but there are no step-by-step multi-phase review flows like those available in tools that support a dedicated skills directory.
+</Note>
+
+## What gets installed
+
+<CardGroup cols={1}>
+  <Card title=".github/copilot-instructions.md" icon="file-lines">
+    A single instructions file that inlines all six Well-Architected pillars, design principles, trade-off guidance, and response formatting rules. GitHub Copilot reads this file automatically for every conversation in the repository.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy the instructions file into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      mkdir -p .github
+      cp path/to/this-repo/adapters/github-copilot/.github/copilot-instructions.md .github/
+      ```
+
+      ```powershell Windows
+      New-Item -ItemType Directory -Force -Path .github
+      Copy-Item path\to\this-repo\adapters\github-copilot\.github\copilot-instructions.md .github\
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project should now contain:
+
+    ```text
+    .github/
+      copilot-instructions.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles directory creation and copying automatically:
+
+```bash
+./install.sh ~/my-project --tool github-copilot
+```
+
+## Usage
+
+Once `.github/copilot-instructions.md` is committed to your repository, GitHub Copilot applies Well-Architected principles automatically whenever you discuss architecture in Copilot Chat or ask for infrastructure code suggestions in the IDE. No explicit invocation is needed.
+
+<CodeGroup>
+  ```text Architecture review
+  What Well-Architected considerations should I address in this design?
+  ```
+
+  ```text Infrastructure code
+  Write a CDK stack for this Lambda function following Well-Architected best practices.
+  ```
+
+  ```text Trade-off analysis
+  What are the reliability and cost trade-offs of this multi-region approach?
+  ```
+
+  ```text Security guidance
+  Review the IAM policies in this file for least-privilege alignment.
+  ```
+</CodeGroup>
+
+Copilot will group findings by pillar and use severity labels (🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice) as instructed by the guidance file.
+
+<Tip>
+  Because all guidance is inlined, the WA context is always present without you needing to prompt for it. Copilot will proactively surface relevant pillar considerations when you ask about infrastructure, deployment, or system design topics.
+</Tip>
+
+## What's covered in the instructions file
+
+The `copilot-instructions.md` file embeds the following guidance that Copilot applies to every interaction:
+
+| Section | Content |
+|---------|---------|
+| **Role** | AWS Well-Architected advisor persona |
+| **Six pillars** | Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, Sustainability |
+| **Design principles** | Managed services, design for failure, decoupling, multi-AZ, least privilege, IaC, observability |
+| **Trade-off guidance** | Security vs. latency, availability vs. cost, performance vs. portability, cost vs. resilience |
+| **Response format** | Pillar grouping, severity labels, "why it matters" context, concrete next steps |

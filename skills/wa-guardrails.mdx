@@ -1,0 +1,329 @@
+---
+title: "wa-guardrails: Generate AWS Preventive Controls and Guardrails"
+sidebarTitle: "WA Guardrails"
+description: "Generate preventive controls for ongoing AWS Well-Architected compliance — AWS Config rules, SCPs, CI/CD checks, and CloudWatch alarms tailored to your workload."
+---
+
+The `wa-guardrails` skill teaches your AI coding agent to generate ready-to-commit preventive and detective controls that keep a workload Well-Architected over time. Where assessment skills find gaps and remediation fixes them once, guardrails codify best practices so non-compliant configurations are blocked or flagged automatically — in CI/CD pipelines, at deploy time, and continuously across the account.
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="CI/CD Policy Checks" icon="shield-check">
+    CDK Aspects that fail `cdk synth`, `cfn-guard` rules for CloudFormation, and OPA/Sentinel policies for Terraform — catching misconfigurations before they ever deploy. Strongest and cheapest enforcement point.
+  </Card>
+  <Card title="AWS Config Rules" icon="magnifying-glass">
+    Managed and custom Config rules for continuous compliance checking of live resources — detecting drift, unencrypted buckets, disabled backups, and missing Multi-AZ configurations.
+  </Card>
+  <Card title="Service Control Policies" icon="lock">
+    SCPs that prevent non-compliant resource creation org-wide — blocking public S3 bucket creation, disabling of CloudTrail, or unencrypted RDS instance launches regardless of who deploys.
+  </Card>
+  <Card title="CloudWatch Alarms" icon="bell">
+    Individual and composite alarms for operational guardrails — DLQ depth, error rates, latency thresholds, and cost anomalies — each tied to the WA Best Practice ID it enforces.
+  </Card>
+</CardGroup>
+
+## Preventive vs detective controls
+
+The skill always selects the strongest control your enforcement points allow, preferring **preventive** over **detective**:
+
+<Steps>
+  <Step title="CI/CD policy check (strongest — preventive)">
+    Can the misconfiguration be caught in IaC before deploy? If yes, the skill generates a CDK Aspect, `cfn-guard` rule, or Terraform OPA policy. This stops the bad configuration from ever reaching AWS.
+  </Step>
+  <Step title="SCP or permission boundary (preventive, org-wide)">
+    Must the control apply across the entire AWS Organization regardless of who deploys? SCPs and permission boundaries are generated for hard-line controls like "never allow public S3 buckets" or "never disable CloudTrail."
+  </Step>
+  <Step title="AWS Config rule (detective)">
+    Is the issue only visible on a live resource — drift, runtime state, or configurations that can't be validated in IaC? Config rules are generated as detective controls, with auto-remediation offered only on explicit request.
+  </Step>
+  <Step title="CloudWatch alarm (detective, operational)">
+    Is the issue a continuous reliability, cost, or performance signal? Alarms and composite alarms are generated for operational guardrails.
+  </Step>
+</Steps>
+
+<Warning>
+  The skill never generates a control for an enforcement point you don't have. If a control can't be enforced with your available points, it states this explicitly and explains what would be needed.
+</Warning>
+
+## Coverage across all 6 WA pillars
+
+<Tabs>
+  <Tab title="Security">
+    **Config rules**: `s3-bucket-server-side-encryption-enabled`, `s3-bucket-public-read-prohibited`, `iam-policy-no-statements-with-admin-access`, `cloudtrail-enabled`
+
+    **SCPs**: Deny creation of unencrypted S3 buckets; deny disabling of CloudTrail; deny creation of IAM users with console access
+
+    **CDK Aspects**: Fail synth on security groups open to `0.0.0.0/0` on non-web ports; fail synth on KMS keys without key rotation enabled
+
+    WA questions covered: SEC 1, SEC 2, SEC 5, SEC 7, SEC 8
+  </Tab>
+  <Tab title="Reliability">
+    **Config rules**: `rds-multi-az-support`, `dynamodb-pitr-enabled`, `db-instance-backup-enabled`, `vpc-sg-open-only-to-authorized-ports`
+
+    **cfn-guard**: Block RDS instances without `DeletionProtection: true`; block DynamoDB tables without PITR enabled
+
+    **CloudWatch alarms**: DLQ depth alarm; failed Lambda executions composite alarm
+
+    WA questions covered: REL 7, REL 9, REL 10, REL 11
+  </Tab>
+  <Tab title="Operational Excellence">
+    **CI/CD checks**: Required tag enforcement (owner, cost-center, environment) as a CDK Aspect; CloudWatch log retention minimum policy
+
+    **SCPs**: Deny manual console changes to resources managed by IaC stacks
+
+    **Config rules**: `cloud-trail-log-file-validation-enabled`, `cloudwatch-log-group-encrypted`
+
+    WA questions covered: OPS 4, OPS 7, OPS 8
+  </Tab>
+  <Tab title="Cost Optimization">
+    **CI/CD checks**: Instance type allowlist check (flag non-approved instance families); capacity mode validation for DynamoDB
+
+    **CloudWatch alarms**: AWS Budgets anomaly detection; `EstimatedCharges` alarm above threshold
+
+    WA questions covered: COST 3, COST 6, COST 7
+  </Tab>
+  <Tab title="Performance & Sustainability">
+    **CI/CD checks**: Graviton preference check (warn on x86 Lambda where arm64 applies); managed service preference (flag self-managed Redis/Kafka)
+
+    WA questions covered: PERF 1, SUS 5
+  </Tab>
+</Tabs>
+
+## How to invoke it
+
+<CodeGroup>
+```text Generate guardrails
+Generate guardrails for our payments workload
+```
+
+```text Security Config rules
+Create AWS Config rules to enforce encryption and public access controls
+```
+
+```text Prevent public S3
+Add an SCP to prevent public S3 bucket creation across our org
+```
+
+```text Post-review controls
+Codify the critical findings from our wa-review as permanent controls
+```
+
+```text Governance doc
+Generate a governance steering doc for our AI coding agent from our guardrails
+```
+</CodeGroup>
+
+## Generated control examples
+
+Every control is produced as ready-to-commit code in your workload's existing dialect, labeled preventive or detective, and tied to a WA BP ID.
+
+<CodeGroup>
+```yaml AWS Config rule (CloudFormation)
+# guardrails/config-rules.yaml
+# 🔍 Detective — flags any S3 bucket without server-side encryption (SEC 8)
+Resources:
+  S3EncryptionEnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: s3-bucket-server-side-encryption-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+
+  DynamoDBPITREnabled:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      ConfigRuleName: dynamodb-pitr-enabled
+      Source:
+        Owner: AWS
+        SourceIdentifier: DYNAMODB_PITR_ENABLED
+```
+
+```typescript CDK Aspect (TypeScript)
+// guardrails/no-open-sg.aspect.ts
+// 🛡️ Preventive — fails `cdk synth` on 0.0.0.0/0 ingress to non-web ports (SEC 5)
+import { IAspect, Annotations } from 'aws-cdk-lib';
+import { CfnSecurityGroupIngress } from 'aws-cdk-lib/aws-ec2';
+import { IConstruct } from 'constructs';
+
+export class NoOpenIngress implements IAspect {
+  visit(node: IConstruct): void {
+    if (
+      node instanceof CfnSecurityGroupIngress &&
+      node.cidrIp === '0.0.0.0/0' &&
+      ![80, 443].includes(Number(node.fromPort))
+    ) {
+      Annotations.of(node).addError(
+        `SEC 5: security group open to 0.0.0.0/0 on port ${node.fromPort}. ` +
+        `Restrict to known CIDR ranges or use a security group reference.`
+      );
+    }
+  }
+}
+```
+
+```hcl cfn-guard rule (CloudFormation)
+# guardrails/reliability.guard
+# 🛡️ Preventive — blocks RDS instances without Multi-AZ and deletion protection (REL 9)
+AWS::RDS::DBInstance {
+  Properties {
+    MultiAZ == true
+    DeletionProtection == true
+    BackupRetentionPeriod >= 7
+  }
+}
+```
+
+```json SCP (AWS Organizations)
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPublicS3BucketACL",
+      "Effect": "Deny",
+      "Action": [
+        "s3:PutBucketAcl",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": [
+            "public-read",
+            "public-read-write",
+            "authenticated-read"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyDisableCloudTrail",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Example guardrails plan output
+
+```markdown
+# Well-Architected Guardrails: payments-service
+
+## Summary
+- IaC dialect: CDK TypeScript
+- Enforcement points used: CDK Aspects (CI), AWS Config, CloudWatch Alarms
+- Source: wa-review output (2025-06-01)
+- Controls generated: 12 (7 preventive, 5 detective) across Security, Reliability, Operational Excellence
+
+## Controls by pillar
+
+### Security — SEC 8 (Encryption at rest)
+- Control: S3 server-side encryption | 🔍 Detective | Enforcement: AWS Config
+- Blocks/flags: S3 buckets created without SSE — encryption protects against unauthorized
+  access to raw storage and satisfies common compliance requirements
+- File: `guardrails/config-rules.yaml`
+- Coverage gap: Does not enforce specific KMS key — add CMK Aspect for stricter enforcement
+
+### Security — SEC 5 (Network protection)
+- Control: No open security groups | 🛡️ Preventive | Enforcement: CDK Aspect (CI)
+- Blocks/flags: Security groups allowing 0.0.0.0/0 ingress on non-web ports —
+  overly permissive ingress is the most common lateral movement enabler
+- File: `guardrails/no-open-sg.aspect.ts`
+
+### Reliability — REL 9 (Data backup)
+- Control: RDS Multi-AZ + deletion protection | 🛡️ Preventive | Enforcement: cfn-guard (CI)
+- Blocks/flags: RDS instances without Multi-AZ or DeletionProtection — prevents accidental
+  single-AZ database deployments that create SPOFs
+- File: `guardrails/reliability.guard`
+
+## Rollout plan
+| Order | Control                   | Enforcement | False-positive risk | Notes                          |
+|-------|---------------------------|-------------|---------------------|--------------------------------|
+| 1     | S3 encryption Config rule | Config       | Low                 | Warn mode for 1 week first     |
+| 2     | No open SG Aspect         | CDK CI      | Medium              | Audit existing SGs before block|
+| 3     | RDS cfn-guard rule        | CI          | Low                 | Test on dev stack first        |
+| 4     | SCP: no public S3         | Organizations| Low                | Apply to non-prod OU first     |
+
+## Verification
+- S3 encryption rule: create an unencrypted bucket in a test account — Config should flag
+  within 15 minutes and mark it NON_COMPLIANT
+- No open SG Aspect: add an unrestricted ingress rule to a dev stack — `cdk synth` must fail
+  with SEC 5 error message
+- cfn-guard rule: run `cfn-guard validate -r guardrails/reliability.guard -d test/rds-no-multiaz.json`
+  — must return FAIL
+```
+
+## Governance steering doc
+
+After generating machine-enforced controls, the skill offers to produce a companion governance document — a human- and agent-readable steering file that covers standards no control can fully express.
+
+```markdown
+# payments-service — Well-Architected Guardrails (Governance)
+
+## Enforced automatically
+- SEC 5: `guardrails/no-open-sg.aspect.ts` — blocks 0.0.0.0/0 ingress at synth time
+- SEC 8: `guardrails/config-rules.yaml` → S3EncryptionEnabled — flags unencrypted buckets
+- REL 9: `guardrails/reliability.guard` — blocks RDS without Multi-AZ and deletion protection
+
+## Conventions to follow (not auto-enforced)
+- Security — New IAM roles must follow least-privilege; request only actions needed for
+  the specific task (SEC 2). Reviewed in PRs by a security-aware team member.
+- Reliability — Every new stateful resource must have a defined recovery objective documented
+  in its stack file (REL 9). Reviewer checks for backup retention and PITR.
+- Cost — New Lambda functions should use arm64 architecture unless a specific x86 dependency
+  is documented in the PR (SUS 5 / COST 6).
+
+## When proposing or reviewing changes to this workload
+- New data stores MUST have encryption + backups before merge (SEC 8 / REL 9)
+- New network resources MUST NOT open 0.0.0.0/0 on non-web ports (SEC 5) — enforced by Aspect
+- Any new public endpoint MUST have a WAF rule set associated (SEC 6)
+```
+
+This governance doc can be saved as a steering file for Kiro (`.kiro/steering/`), Claude Code (`CLAUDE.md`), Cursor (`.cursor/rules/`), or any supported tool — giving your AI coding agent always-on awareness of the standards.
+
+## Rollout guidance
+
+<Warning>
+  Always roll out preventive controls in warn/log mode first. Applying a hard `Deny` SCP or a blocking CDK Aspect directly to existing pipelines risks breaking deployments. The skill flags this and stages rollout accordingly.
+</Warning>
+
+<Note>
+  Auto-remediation on Config rules is **destructive** — it modifies live resources automatically. The skill only generates auto-remediation code when you explicitly request it, and always includes a safety review and rollback note.
+</Note>
+
+## Effectiveness
+
+<Note>
+  Evaluated using an automated LLM-as-judge framework with paired comparison (same prompt, with and without skill context) using Claude Opus 4.8.
+</Note>
+
+| | Baseline | With skill | Delta |
+|--|---------|-----------|-------|
+| **Score** | 76% | 99% | **+23%** |
+
+A bare agent can describe what guardrails should exist; the skill generates commit-ready code in your workload's actual dialect, tied to WA BP IDs, with rollout staging guidance — the gap that drives the +23% improvement.
+
+## Follow-up actions the agent offers
+
+After delivering the guardrails plan, the agent offers to:
+
+- Generate the CI workflow wiring (GitHub Actions step or CodePipeline action) to run the policy checks
+- Produce a governance steering doc for your AI agent (CLAUDE.md, `.cursor/rules/`, `.kiro/steering/`)
+- Add auto-remediation to a detective Config rule (with a full safety review)
+- Fix the existing violations that these guardrails would block (remediate the current code)
+- Tighten a control from warn mode to block mode after confirming zero false positives
+
+## Related skills
+
+| Skill | When to use instead |
+|-------|---------------------|
+| [`wa-review`](/skills/wa-review) | Find gaps first — then use `wa-guardrails` to prevent them from recurring |
+| [`security-assessment`](/skills/security-assessment) | Deep-dive into IAM, detection controls, and incident response rather than generating enforcement code |
+| [`operational-excellence`](/skills/operational-excellence) | Assess CI/CD and observability configuration before codifying it as guardrails |

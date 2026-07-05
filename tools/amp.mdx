@@ -1,0 +1,119 @@
+---
+title: "Install Well-Architected Skills in Amp"
+sidebarTitle: "Amp"
+description: "Configure Amp with Well-Architected steering via AGENTS.md and skills in .agents/skills/ for step-by-step architectural playbooks."
+---
+
+Amp reads `AGENTS.md` from your project root as persistent steering context and discovers structured skills from the `.agents/skills/` directory. Installing both gives Amp always-on Well-Architected awareness plus 11 step-by-step assessment playbooks it can follow on request.
+
+## What gets installed
+
+<CardGroup cols={2}>
+  <Card title="AGENTS.md" icon="file-lines">
+    Steering context that applies the six Well-Architected pillars to every architecture conversation, surfaces trade-offs, and routes structured assessment requests to the correct skill.
+  </Card>
+  <Card title=".agents/skills/ directory" icon="folder-open">
+    Eleven skill subdirectories, each containing a `SKILL.md` playbook. Amp reads these when you invoke a specific review or plan.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy files into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      cp path/to/this-repo/adapters/amp/AGENTS.md ./AGENTS.md
+      mkdir -p .agents/skills
+      cp -r path/to/this-repo/skills/* .agents/skills/
+      ```
+
+      ```powershell Windows
+      Copy-Item path\to\this-repo\adapters\amp\AGENTS.md .\AGENTS.md
+      New-Item -ItemType Directory -Force -Path .agents\skills
+      Copy-Item -Recurse path\to\this-repo\skills\* .agents\skills\
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project should now contain:
+
+    ```text
+    AGENTS.md
+    .agents/
+      skills/
+        wa-review/SKILL.md
+        security-assessment/SKILL.md
+        reliability-improvement-plan/SKILL.md
+        cost-optimization-review/SKILL.md
+        performance-efficiency/SKILL.md
+        sustainability-optimization/SKILL.md
+        operational-excellence/SKILL.md
+        migration-readiness/SKILL.md
+        architecture-decision-record/SKILL.md
+        wa-builder/SKILL.md
+        wa-guardrails/SKILL.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles directory creation and copying automatically:
+
+```bash
+./install.sh ~/my-project --tool amp
+```
+
+## Usage
+
+With `AGENTS.md` present, Amp applies Well-Architected principles automatically whenever architecture topics come up. Invoke a specific skill by name or description:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this architecture.
+  ```
+
+  ```text Security assessment
+  Do a security assessment — focus on IAM and data protection.
+  ```
+
+  ```text Cost review
+  Review our infrastructure costs and identify right-sizing opportunities.
+  ```
+
+  ```text Guardrails
+  Generate preventive guardrails (Config rules, SCPs) to keep this workload aligned with WA best practices.
+  ```
+</CodeGroup>
+
+Amp reads `AGENTS.md` at session start and loads the matching `.agents/skills/{skill-name}/SKILL.md` when a structured assessment is requested.
+
+<Tip>
+  The steering in `AGENTS.md` instructs Amp to group findings by pillar and apply severity labels (🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice). Start with a quick review to identify which pillars have gaps, then request a deeper dive on specific areas.
+</Tip>
+
+## Available skills
+
+| Skill | What it does |
+|-------|-------------|
+| `wa-review` | Full 6-pillar review with prioritized findings report |
+| `security-assessment` | Deep-dive into IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Find SPOFs, assess recovery, produce remediation plan |
+| `cost-optimization-review` | Identify waste, right-sizing, pricing model improvements |
+| `performance-efficiency` | Resource selection, scaling, caching, optimization |
+| `sustainability-optimization` | Utilization, architecture efficiency, carbon reduction |
+| `operational-excellence` | CI/CD, observability, incident management, operational maturity |
+| `migration-readiness` | 7 Rs assessment, dependency analysis, migration plan |
+| `architecture-decision-record` | ADR with WA pillar impact analysis |
+| `wa-builder` | Learn WA for your workload and generate visual artifacts |
+| `wa-guardrails` | Generate preventive controls (Config rules, SCPs, CI checks) |

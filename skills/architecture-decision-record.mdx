@@ -1,0 +1,209 @@
+---
+title: "architecture-decision-record: WA-Aligned ADRs with Pillar Impact"
+sidebarTitle: "ADR"
+description: "Document architectural design decisions with AWS Well-Architected pillar impact analysis, trade-off evaluation, and structured ADR output for your codebase."
+---
+
+The `architecture-decision-record` skill teaches your AI coding agent to produce structured Architecture Decision Records that are grounded in your actual codebase. Instead of generic pros-and-cons lists, every ADR includes code evidence for affected files, migration steps, reversibility analysis, and a Well-Architected pillar impact table that only covers pillars where the decision genuinely matters.
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="Code-Grounded Analysis" icon="code-branch">
+    The agent reads your IaC, application code, and configuration files before writing a single line of the ADR. Implementation effort is expressed as specific files affected and migration steps — not T-shirt sizes.
+  </Card>
+  <Card title="WA Pillar Impact Table" icon="table">
+    Each option is scored against the six WA pillars. Pillars with no real impact are omitted to keep the table honest. Each non-neutral score requires a reason tied to actual code or architecture patterns.
+  </Card>
+  <Card title="Trade-off Transparency" icon="scale-balanced">
+    The ADR explicitly documents what you gain, what you accept, and what could go wrong — including reversibility. Irreversible decisions get deeper options analysis.
+  </Card>
+  <Card title="Review Triggers" icon="bell">
+    Each ADR ends with specific, measurable conditions — not vague "revisit when things change" notes — so the decision gets re-evaluated when the actual thresholds are hit.
+  </Card>
+</CardGroup>
+
+## ADR structure
+
+Every ADR produced by the skill follows this structure:
+
+<Steps>
+  <Step title="Context">
+    Problem statement, current state with file paths and code references, constraints derived from codebase analysis (not assumptions), and decision drivers ordered by priority.
+  </Step>
+  <Step title="Options evaluated">
+    For each option: how it works, pros, cons, files affected (listed by path), migration steps from current state, and effort estimate with basis. One option is marked Chosen; others are marked Rejected with a clear primary reason and the future condition under which they would become the better choice.
+  </Step>
+  <Step title="Well-Architected impact">
+    A pillar impact table using ✅ Positive, ➖ Neutral, ⚠️ Trade-off, ❌ Negative — with only non-neutral pillars shown. Each entry explains why, grounded in the codebase's reality and citing the specific AWS service or code path that creates the benefit or risk.
+  </Step>
+  <Step title="Trade-offs">
+    Explicit statements of what you gain (with evidence), what you accept (with justification), and a risk table covering likelihood, impact, and concrete mitigations.
+  </Step>
+  <Step title="Implementation">
+    Step-by-step migration path with affected files named, a specific rollback plan (not "revert the change"), and verification criteria — metrics or tests that confirm the decision is working.
+  </Step>
+  <Step title="Review triggers">
+    Specific, measurable thresholds: "p99 latency exceeds 500ms", "team grows beyond 8 engineers", "re-evaluate after 6 months of production data".
+  </Step>
+</Steps>
+
+## How to invoke it
+
+<CodeGroup>
+```text Document a decision
+Document our decision to use SQS instead of Kinesis for the order pipeline
+```
+
+```text Compare options
+Compare EventBridge vs SNS+SQS for our notification fan-out — write an ADR
+```
+
+```text ADR for a design choice
+Write an ADR for switching from monolithic Lambda to microservices
+```
+
+```text Revise an existing ADR
+Our ADR-005 is out of date — review it against the current codebase and update it
+```
+</CodeGroup>
+
+## Worked example: SQS vs Kinesis
+
+The skill's output for a real architectural decision looks like this. Notice how the pillar table omits pillars that are genuinely neutral:
+
+```markdown
+# ADR-012: Event pipeline for order processing — SQS vs Kinesis Data Streams
+
+## Status
+Accepted
+
+## Date
+2025-06-01
+
+## Context
+
+### Problem Statement
+Order events are currently published directly to the processor Lambda, creating tight coupling
+and no replay capability. We need a durable, ordered event pipeline between order-service and
+fulfillment-service.
+
+### Current State
+- `src/order-service/handlers/create-order.ts:87` — direct Lambda.invoke() to fulfillment-service
+- `infrastructure/order-stack.ts:44` — no queue or stream configured
+- `src/fulfillment-service/` — expects synchronous invocation, no consumer group logic
+
+### Constraints
+- Fulfillment service requires strict per-customer ordering — Evidence: `ARCHITECTURE.md:23`
+- Team has no Kinesis operational experience — Evidence: `team-skills.md`
+- Current throughput: ~50 orders/min peak — Evidence: `monitoring/dashboards.json:metrics`
+
+### Decision Drivers
+1. Per-customer ordering guarantee — required by fulfillment service contract
+2. Operational simplicity — team onboarding to AWS queuing for the first time
+3. Replay capability — at least 7-day retention for incident recovery
+
+## Decision
+Use Amazon SQS FIFO queues with message group IDs mapped to customer IDs.
+
+## Options Evaluated
+
+### Option 1: SQS FIFO ← Chosen
+- **How it works**: FIFO queue with `MessageGroupId = customerId` gives per-customer ordering;
+  standard SQS retry and DLQ handling for failures
+- **Pros**: team-familiar pattern, no shard management, built-in DLQ, scales automatically
+- **Cons**: max 300 TPS per API action (30,000 with batching); no sub-second reprocessing
+- **Files affected**: `infrastructure/order-stack.ts`, `src/order-service/handlers/create-order.ts`,
+  `src/fulfillment-service/handlers/process-order.ts` (3 files)
+- **Migration**: add SQS FIFO construct → update publisher to sendMessage → convert consumer to
+  SQS event source mapping → remove direct Lambda.invoke
+- **Effort**: ~3 days
+
+### Option 2: Kinesis Data Streams — Rejected
+- **Primary rejection reason**: shard management complexity for a team with no Kinesis experience,
+  and current 50 orders/min throughput doesn't justify the operational overhead
+- **Would choose this if**: throughput exceeds 5,000 orders/min or replay latency under 100ms
+  becomes a hard requirement
+
+## Well-Architected Impact
+
+| Pillar | Option A (SQS FIFO) | Option B (Kinesis) |
+|--------|---------------------|--------------------|
+| Reliability | ✅ Built-in DLQ, at-least-once delivery, automatic scaling | ⚠️ Shard iterator management; data loss on unhandled consumer failures |
+| Operational Excellence | ✅ Team-familiar; CloudWatch metrics out of the box | ❌ Shard monitoring, resharding operations, enhanced fan-out complexity |
+| Cost Optimization | ✅ Pay-per-request, no idle capacity | ⚠️ Hourly per-shard charge even at low throughput (~$10.95/shard/month) |
+
+## Trade-offs
+
+### What We Gain
+- Per-customer ordering without application-level sequencing logic — matters because fulfillment
+  service relies on order state being applied in sequence (ARCHITECTURE.md:23)
+- DLQ + CloudWatch alarm = automatic failure surfacing with zero additional instrumentation
+
+### What We Accept
+- 300 TPS ceiling on the FIFO queue API — acceptable at current 50 orders/min peak;
+  review trigger set at 3,000 orders/min to allow headroom
+
+### Risks
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| FIFO TPS limit hit unexpectedly | Low | High — orders queued | Alarm at 200 TPS; pre-tested Kinesis migration path |
+| MessageGroupId cardinality too high | Low | Medium — queue lag | Cap at customerId; monitor ApproximateAgeOfOldestMessage |
+
+## Implementation
+
+### Migration Path
+1. Add `SqsFifoQueue` construct in `infrastructure/order-stack.ts:44`
+2. Update `create-order.ts:87`: replace `Lambda.invoke()` with `sqs.sendMessage({MessageGroupId: customerId})`
+3. Update `fulfillment-service/handler`: add SQS event source mapping, remove synchronous handler
+4. Deploy with feature flag; validate via `integration-tests/order-pipeline.test.ts`
+5. Remove old Lambda.invoke path after 2-week parallel run
+
+### Rollback Plan
+Re-enable `DIRECT_INVOKE` feature flag in SSM Parameter Store (`/payments/features/direct-invoke`);
+fulfillment handler retains synchronous path for 30 days post-migration.
+
+### Verification
+- `ApproximateNumberOfMessagesNotVisible` stays < 10 under load test
+- `NumberOfMessagesFailed` alarm threshold: 0 for 5 minutes → PagerDuty
+
+## Review Triggers
+- Orders/min sustained > 3,000 for 24 hours (CloudWatch metric)
+- Team grows beyond 10 engineers and a dedicated platform team forms
+- Re-evaluate 6 months after go-live with production latency data
+```
+
+## Effectiveness
+
+<Note>
+  Evaluated using an automated LLM-as-judge framework with paired comparison (same prompt, with and without skill context) using Claude Opus 4.8.
+</Note>
+
+| | Baseline | With skill | Delta |
+|--|---------|-----------|-------|
+| **Score** | 81% | 100% | **+19%** |
+
+ADRs show the highest improvement among pillar-specific skills because a bare agent typically produces generic pros-and-cons lists. The skill adds code-evidenced implementation effort, concrete review triggers, and WA pillar scoring — all missing from baseline output.
+
+## When no code is available
+
+<Note>
+  If you invoke the skill without being in a codebase, the agent still produces a full ADR but marks implementation sections as "Verify against code." The WA pillar analysis remains valid; the file-level impact analysis requires code access to be precise.
+</Note>
+
+## Revising an existing ADR
+
+The skill also handles ADR maintenance. If you ask it to revise `docs/decisions/ADR-005.md`, the agent will:
+
+1. Read the existing ADR
+2. Compare the current state of the codebase against what the ADR documented
+3. Check whether any review triggers have been reached
+4. Either confirm the decision still holds or create a superseding ADR that explains what changed
+
+## Related skills
+
+| Skill | When to use instead |
+|-------|---------------------|
+| [`wa-review`](/skills/wa-review) | Run a full cross-pillar review to generate findings that feed into ADRs |
+| [`migration-readiness`](/skills/migration-readiness) | Document the overall migration strategy rather than individual component decisions |
+| [`wa-builder`](/skills/wa-builder) | Learn WA concepts and generate diagrams before writing ADRs for complex decisions |

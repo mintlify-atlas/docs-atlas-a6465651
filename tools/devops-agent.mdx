@@ -1,0 +1,133 @@
+---
+title: "Install Well-Architected Skills in AWS DevOps Agent"
+sidebarTitle: "DevOps Agent"
+description: "Package and upload Well-Architected skills as zip files to your AWS DevOps Agent Space. Each skill becomes a self-contained uploadable unit via the Operator Web App."
+---
+
+AWS DevOps Agent uses a different model from other tools in this project. Instead of reading config files from your local repository, skills are packaged as zip files and uploaded to an Agent Space via the Operator Web App. Each skill becomes a self-contained, reusable investigation workflow that DevOps Agent can activate based on your request or automatically when matching conditions are detected.
+
+<Info>
+  AWS DevOps Agent does not use a steering mechanism. There is no equivalent of `AGENTS.md` or `.kiro/steering/`. Each skill's `SKILL.md` is entirely self-contained and includes all guidance the agent needs to run that assessment.
+</Info>
+
+## What gets created
+
+<CardGroup cols={2}>
+  <Card title="Skill zip files" icon="file-zipper">
+    One `.zip` per skill, created in `output-dir/devops-agent-skills/`. Each zip contains the skill's `SKILL.md` and any bundled reference material from the shared `assets/` directory.
+  </Card>
+  <Card title="Agent Space skills" icon="cloud-arrow-up">
+    After upload via the Operator Web App, each skill appears in your Agent Space and can be activated by DevOps Agent during investigations, on-demand queries, or automated evaluations.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository locally:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Package the skills as zip files">
+    Run the install script with `--tool devops-agent`. It creates one zip per skill in the output directory you specify.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      # Package all skills as zip files
+      ./install.sh ~/output-dir --tool devops-agent
+      # Zips are written to ~/output-dir/devops-agent-skills/
+      ```
+
+      ```powershell Windows
+      # Package all skills as zip files
+      .\install.ps1 -TargetDir C:\output-dir -Tool devops-agent
+      # Zips are written to C:\output-dir\devops-agent-skills\
+      ```
+    </CodeGroup>
+
+    After running, the output directory contains one zip per skill:
+
+    ```text
+    output-dir/
+      devops-agent-skills/
+        wa-review.zip
+        security-assessment.zip
+        reliability-improvement-plan.zip
+        cost-optimization-review.zip
+        performance-efficiency.zip
+        sustainability-optimization.zip
+        operational-excellence.zip
+        migration-readiness.zip
+        architecture-decision-record.zip
+        wa-builder.zip
+        wa-guardrails.zip
+    ```
+  </Step>
+  <Step title="Upload each zip to your Agent Space">
+    For each skill zip file:
+
+    1. Open the **AWS DevOps Agent Operator Web App**
+    2. Navigate to **Skills** in your Agent Space
+    3. Click **Add skill** → **Upload skill**
+    4. Select the `.zip` file
+    5. Choose the agent type — **Generic** or a specific type (see recommendations below)
+    6. Save the skill
+
+    Repeat for each zip. You can upload only the skills you need — you don't have to upload all eleven.
+  </Step>
+</Steps>
+
+## Skill structure inside each zip
+
+Each zip file follows the [Agent Skills specification](https://agentskills.io/) format supported by DevOps Agent:
+
+```text
+skill-name/
+  SKILL.md          # Main instructions — required
+  references/       # Supplementary reference docs — optional
+  assets/           # Shared WA reference material bundled at install time
+```
+
+<Warning>
+  The total zip size must not exceed **6 MB**. Skills with large reference directories (such as `wa-review`, which includes 57 per-question Best Practice files) are pre-structured to stay within this limit. If you add custom reference material, verify the zip size before uploading.
+</Warning>
+
+## Agent type recommendations
+
+DevOps Agent supports multiple agent types. Choose the type that best matches how you plan to use each skill:
+
+| Skill | Recommended Agent Type |
+|-------|----------------------|
+| `wa-review` | On-demand, Evaluation |
+| `security-assessment` | On-demand, Evaluation |
+| `reliability-improvement-plan` | On-demand, Incident RCA |
+| `cost-optimization-review` | On-demand, Evaluation |
+| `performance-efficiency` | On-demand, Incident RCA |
+| `sustainability-optimization` | On-demand, Evaluation |
+| `migration-readiness` | On-demand |
+| `architecture-decision-record` | On-demand |
+| `wa-builder` | On-demand, Evaluation |
+| `wa-guardrails` | On-demand, Evaluation |
+| `operational-excellence` | On-demand, Evaluation |
+
+<Tip>
+  Use **Generic** if you want a skill available across all agent types without restriction. Use a specific type (On-demand, Evaluation, Incident RCA, etc.) to keep skills focused and avoid loading unnecessary context in unrelated agent conversations.
+</Tip>
+
+## You can also create skills manually
+
+If you prefer not to use zip upload, you can create skills directly in the Operator Web App:
+
+1. Navigate to **Skills** in your Agent Space
+2. Click **Add skill** → **Create skill**
+3. Copy the `name` and `description` from the skill's `SKILL.md` frontmatter
+4. Paste the full instruction body (everything after the frontmatter) into the instructions field
+5. Select the agent type and save
+
+## Reference
+
+- [AWS DevOps Agent User Guide](https://docs.aws.amazon.com/devopsagent/latest/userguide/)
+- [Agent Skills specification](https://agentskills.io/)

@@ -1,0 +1,171 @@
+---
+title: "How Well-Architected Skills & Steering Works"
+sidebarTitle: "How It Works"
+description: "Understand how skills, steering, adapters, and powers work together to deliver AWS Well-Architected guidance across 13 AI coding tools from a single source of truth."
+---
+
+Well-Architected Skills & Steering is built around a simple idea: write WA guidance once, in a tool-agnostic format, then translate it into every AI coding tool's native configuration through adapters. This keeps all 13 tools in sync with a single source of truth — updating a skill or steering file propagates to every tool the next time you reinstall or sync via symlink.
+
+## The architecture
+
+At its core, the system has three layers:
+
+1. **Source layer** — `skills/` and `steering/` contain the canonical, tool-agnostic WA content
+2. **Translation layer** — `adapters/` converts that content into each tool's native format
+3. **Activation layer** — each tool loads the adapted content using its own mechanism (steering files, slash commands, rules, guidelines, etc.)
+
+```
+skills/          steering/
+    │                 │
+    └──────┬──────────┘
+           │
+       adapters/
+           │
+    ┌──────┴──────────────────────────────────────┐
+    │                                             │
+  Kiro    Claude Code    Cursor    Codex    Windsurf
+  Gemini CLI    GitHub Copilot    Antigravity    Junie
+  Amp    OpenClaw    Cline    AWS DevOps Agent
+```
+
+Skills are self-contained: they don't depend on steering, and they don't depend on each other. A skill is simply a structured markdown document that any AI agent can follow step-by-step. This means you can install a single skill (`--skill wa-review`) without any of the others and it will work independently.
+
+## Component reference
+
+| Component | What it does | Where it lives | When it activates |
+|-----------|-------------|----------------|-------------------|
+| **Skills** | Self-contained, tool-agnostic step-by-step playbooks. Each skill guides the agent through a specific WA task (full review, security assessment, cost optimization, etc.) with explicit constraints, evidence requirements, and output formats. | `skills/*/SKILL.md` | On demand — invoked by the user, triggered by a slash command, or referenced by the steering file's intent routing |
+| **Steering** | Always-on context loaded into every conversation. Defines the six pillars, design principles, intent routing rules, and conversation style. Orients the agent before any request is made. | `steering/*.md` | Automatically — at the start of every conversation or as a persistent system prompt |
+| **Powers** | Kiro-specific installable bundles. Package steering + skills + all reference material into a single unit. Support keyword-based auto-activation — the agent recognizes trigger phrases and activates the right context without an explicit command. | `powers/*/` | Keyword-triggered — activates when the user mentions phrases like "well-architected", "architecture review", "security review", "reliability" |
+| **Adapters** | Tool-specific configuration files that translate steering and skills into each tool's native format. An adapter for Claude Code produces `CLAUDE.md` and `.claude/commands/*.md`; an adapter for Cursor produces `.cursor/rules/*.md`; and so on. | `adapters/` | At install time — copied (or symlinked) into the target project |
+| **Assets** | Shared reference material including per-pillar investigation checklists, CloudWatch metric thresholds, and incident investigation patterns. Bundled with skills for tools that support inline references. | `assets/` | Loaded by the agent during skill execution when the skill references them |
+
+## Tool compatibility matrix
+
+Each tool has its own mechanism for loading always-on guidance (steering) and for executing structured playbooks (skills). The adapters translate the shared content into the right format for each tool.
+
+| Tool | Steering mechanism | Skills mechanism |
+|------|--------------------|-----------------|
+| Kiro | `.kiro/steering/*.md` | `.kiro/skills/*/SKILL.md` |
+| Claude Code | `CLAUDE.md` | `.claude/commands/*.md` (slash commands) |
+| Cursor | `.cursor/rules/*.md` | Rules with conditional activation |
+| Codex | `AGENTS.md` | References `skills/` directory |
+| Windsurf | `.windsurfrules` | References `skills/` directory |
+| GitHub Copilot | `.github/copilot-instructions.md` | Inline (no separate skill mechanism) |
+| Cline | `.clinerules` | References `skills/` directory |
+| Gemini CLI | `GEMINI.md` | References `skills/` directory |
+| Antigravity | `.agents/rules/*.md` | `.agents/skills/*/SKILL.md` |
+| Junie | `.junie/guidelines/*.md` | `.junie/skills/*/SKILL.md` |
+| Amp | `AGENTS.md` | `.agents/skills/*/SKILL.md` |
+| OpenClaw | `AGENTS.md` | `.agents/skills/*/SKILL.md` |
+| AWS DevOps Agent | N/A (skills are self-contained) | `SKILL.md` zip upload to Agent Space |
+
+<Note>
+  GitHub Copilot and Cline don't have a separate skill-invocation mechanism, so WA guidance is embedded inline into their steering files. All other tools support distinct skill files that the agent reads on demand, keeping the always-on context lean.
+</Note>
+
+## Intent routing
+
+The steering file does more than load WA context — it acts as a router. When a user's request touches Well-Architected topics, the steering instructs the agent to route it to the most specific skill rather than always defaulting to the full `wa-review`.
+
+| User intent pattern | Routes to | Not this |
+|--------------------|-----------|----------|
+| "security review", "IAM review", "encryption check" | `security-assessment` | `wa-review` |
+| "reliability", "single point of failure", "DR" | `reliability-improvement-plan` | `wa-review` |
+| "cost", "right-sizing", "waste" | `cost-optimization-review` | `wa-review` |
+| "performance", "latency", "scaling" | `performance-efficiency` | `wa-review` |
+| "sustainability", "carbon", "energy efficiency" | `sustainability-optimization` | `wa-review` |
+| "CI/CD", "observability", "deployment strategy" | `operational-excellence` | `wa-review` |
+| "migrate", "7Rs", "lift and shift" | `migration-readiness` | `wa-review` |
+| "ADR", "document our decision", "compare options" | `architecture-decision-record` | `wa-review` |
+| "full review", "all pillars", "comprehensive WA review" | `wa-review` | single-pillar skills |
+| Ambiguous (2+ pillars equally relevant) | `wa-review` | — |
+
+**Routing rules** enforced by the steering:
+
+1. **Specificity wins** — if the request clearly maps to one pillar, use that pillar's skill even if the user says "review"
+2. **Explicit overrides** — if the user names a skill or slash command directly, use it regardless of the routing table
+3. **Ambiguity → ask** — if two skills could equally apply, ask one clarifying question rather than guessing
+4. **Cross-pillar → wa-review** — if the request spans three or more pillars or says "comprehensive/full/all", use `wa-review`
+
+This routing behavior means the agent self-selects the right depth of analysis. A vague "can you review this?" on an IAM-heavy codebase will route to `security-assessment` rather than spinning up a full six-pillar review that takes much longer and costs more tokens.
+
+## How the Kiro Power works
+
+Powers are a Kiro-specific concept that bundles everything into a single installable unit. The `wa-review` Power combines:
+
+- The `wa-review` steering file
+- All skill playbooks
+- The full set of 307 best-practice reference files across 57 framework questions
+- Lens packs for serverless, generative AI, agentic AI, and more
+
+**Auto-activation** is the key capability Powers add. Rather than requiring an explicit command, the Power configures Kiro to recognize trigger keywords and automatically load the relevant context. When you write "architecture review" or "reliability concern" in a message, Kiro activates the Power and loads the appropriate steering without any further action.
+
+**Progressive reference loading** ensures the agent only loads context it actually needs. The `wa-review` skill contains 307 best practices across 57 questions — loading all of them at once would consume 500K–600K tokens. Instead, the agent:
+
+1. Reads the skill and steering to understand what it needs to evaluate
+2. Loads one question's reference file at a time as it works through each pillar
+3. Evaluates that question, writes the finding, then moves on
+4. Loads lens packs only if the workload type warrants it (Lambda-heavy → serverless lens)
+
+<Tip>
+  The Kiro Power must be imported from a local folder because the repository contains multiple skills and adapters rather than a single Power at the root. Clone the repository, then use Kiro's Powers panel → **Add Custom Power** → **Import power from a folder** → select `powers/wa-review/`.
+</Tip>
+
+## Progressive reference loading in detail
+
+The `wa-review` skill ships with a large reference library that is intentionally **not** loaded all at once. Understanding how loading works helps you control token consumption and cost.
+
+| Reference content | Files | Approximate size | Loaded when |
+|------------------|-------|-----------------|-------------|
+| Framework questions | 57 | 2.2 MB | Full review — one file per question evaluated |
+| Serverless Lens | 6 | 120 KB | Workload uses Lambda, API Gateway, or Step Functions |
+| Generative AI Lens | 29 | 368 KB | LLM, RAG, or fine-tuning workloads |
+| Agentic AI Lens | 41 | 1.2 MB | AI agent workloads |
+| Responsible AI Lens | 28 | 780 KB | AI governance and fairness requirements |
+| Hybrid Networking Lens | 30 | 480 KB | Direct Connect, VPN, or Transit Gateway |
+| Migration Lens | 6 | 76 KB | Migration planning |
+| DevOps Guidance Lens | 196 | 820 KB | CI/CD, automated governance, observability |
+| Machine Learning Lens | 35 | 852 KB | ML lifecycle, training/deployment, data engineering |
+| Data Analytics Lens | 6 | 180 KB | Data pipelines, governance, analytics performance |
+
+The skill supports a **two-pass approach** to manage context efficiently:
+
+- **Pass 1 (quick scan)** — evaluates all questions at a high level without loading per-question reference files; identifies which pillars have gaps
+- **Pass 2 (deep dive)** — loads reference files only for flagged questions; produces evidence-backed findings with file and line number citations
+
+This two-pass approach typically loads 10–20 reference files (~100K tokens) instead of all 57 (~550K tokens), reducing cost by 50–70% while delivering the same depth on areas that matter.
+
+## The review lifecycle
+
+The steering file defines three stages that map to the Well-Architected improvement cycle:
+
+```
+    ┌──────────┐     ┌──────────┐     ┌──────────┐
+    │  ASSESS  │────►│REMEDIATE │────►│ VALIDATE │
+    │          │     │          │     │          │
+    │wa-review │     │ pillar   │     │wa-review │
+    │pillar    │     │ skills   │     │ (re-run) │
+    │skills    │     │ ADR      │     │          │
+    └──────────┘     └──────────┘     └──────────┘
+         ▲                                  │
+         └──────────────────────────────────┘
+```
+
+- **Assess** — identify gaps using `wa-review` or a pillar-specific skill
+- **Remediate** — fix gaps by generating IaC patches, creating ADRs, or using `wa-guardrails` to generate preventive controls
+- **Validate** — re-run the assessment to confirm improvements and check for regressions
+
+Context carries automatically across skill transitions within the same session. If `security-assessment` already discovered your IAM roles and resource inventory, a subsequent `wa-review` in the same session reuses that discovery rather than re-scanning the codebase.
+
+## How findings are structured
+
+Every skill produces findings that follow a consistent format, regardless of which tool runs them:
+
+- **Risk level** — 🔴 High Risk, 🟡 Medium Risk, 🟢 Best Practice
+- **Evidence** — specific file paths and line numbers supporting each finding
+- **Why it matters** — business impact of the gap
+- **Concrete next step** — specific, actionable recommendation with AWS service suggestions
+- **Pillar group** — finding attributed to one of the six WA pillars
+
+This consistency means you can aggregate findings across tools, share reports with teammates regardless of which AI tool they use, and track improvements over time using the same scoring rubric.

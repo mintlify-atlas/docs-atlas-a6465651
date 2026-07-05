@@ -1,0 +1,93 @@
+---
+title: "Token Consumption and Cost Strategies for WA Reviews"
+sidebarTitle: "Token Consumption"
+description: "Understand token costs for different review scopes and use progressive, pillar-scoped, or quick review strategies to balance depth against cost and context limits."
+---
+
+Running a full Well-Architected review against all 57 framework questions loads approximately 500K–600K input tokens of reference material. Most models and tools have context windows far below that ceiling, and even those that don't will generate significant per-run costs at frontier model pricing. This page explains how the `wa-review` skill manages token consumption and the strategies available to balance review depth against cost.
+
+## Why token volume matters
+
+The `wa-review` skill ships **307 best practices** across **57 question files** plus **27 lens packs**. Loading every file simultaneously is rarely necessary — in practice most architectures pass a majority of questions cleanly, and only a handful of pillars contain meaningful gaps. The skill is designed to exploit this by working sequentially and supporting a two-pass approach that skips clean questions entirely.
+
+<Info>
+  Reference files are loaded one at a time as the agent works through each question. They are not all held in context simultaneously. The agent evaluates a question, writes the finding, then moves on — keeping the active context window manageable.
+</Info>
+
+## Review strategies
+
+Choose the strategy that matches your time and cost constraints:
+
+| Strategy | How | Best for |
+|----------|-----|----------|
+| **Quick review** | Ask for "quick review" — evaluates at question level without loading BP reference files | Fast feedback, budget-conscious |
+| **Pillar-scoped** | Ask for specific pillars ("review security and reliability only") — loads only relevant question files | Targeted deep-dives |
+| **Single-question** | Ask about a specific area ("how are we handling permissions?") — loads only SEC03.md | Focused investigation |
+| **Lens-only** | Ask for just a lens review ("evaluate against the serverless lens") — skips core 57 questions | Domain-specific checks |
+| **Progressive** | Start with a quick review to identify gaps, then drill into flagged pillars with full reference loading | Balanced depth vs. cost |
+
+## Estimated costs
+
+Token estimates assume ~4 characters per token. Costs use Claude Opus 4 pricing ($15/M input, $75/M output) as a reference — actual costs vary by model, provider, and whether prompt caching is enabled.
+
+<Note>
+  Pricing verified June 2026. Verify current rates at the [Anthropic model comparison table](https://docs.anthropic.com/en/docs/about-claude/models#model-comparison-table) before budgeting a run.
+</Note>
+
+| Review type | Reference tokens loaded | Est. input cost | Est. total cost |
+|-------------|------------------------:|----------------:|----------------:|
+| **Quick review** (no reference files) | ~5K (SKILL.md only) | < $0.01 | ~$0.50–$1.00 |
+| **Full review, two-pass** (~20 gap files) | ~190K | ~$2.85 | ~$4–$7 |
+| **Full review, all 57 questions** | ~550K | ~$8.25 | ~$10–$15 |
+| **+ Serverless Lens** | +27K | +$0.40 | +$0.50–$1.00 |
+| **+ Generative AI Lens** | +80K | +$1.20 | +$1.50–$3.00 |
+| **+ Agentic AI Lens** | +294K | +$4.40 | +$5–$8 |
+
+Total cost includes output tokens — the written report itself, typically 8K–30K tokens depending on the number and depth of findings.
+
+## Recommended workflow
+
+Following this three-stage pattern typically loads 10–20 reference files (~100K tokens) instead of all 57-plus-lens files (~600K+), cutting costs by 70–85% while still producing actionable findings.
+
+<Steps>
+  <Step title="Quick review — identify gaps">
+    Ask for a quick review first. The agent evaluates all 57 questions at a high level without loading the per-question reference files. This identifies which pillars have gaps in roughly 1/10th the token budget.
+
+    ```text
+    Give me a quick Well-Architected review of this architecture.
+    ```
+  </Step>
+  <Step title="Pillar-scoped full review — drill into weak areas">
+    Take the pillars flagged in the quick review and run a full reference-backed review on those only. For example, if the quick review flagged security and reliability:
+
+    ```text
+    Now do a full review of the security and reliability pillars only.
+    ```
+
+    This loads the ~11 security + ~13 reliability question files (~24 files, ~200K tokens) instead of all 57.
+  </Step>
+  <Step title="Lens review — apply domain checks (if applicable)">
+    If your workload type warrants it, apply the relevant lens on top. Run this after the pillar review so you're only paying for lens tokens when needed.
+
+    ```text
+    Also evaluate against the Serverless Lens.
+    ```
+  </Step>
+</Steps>
+
+## Cost-saving tips
+
+<CardGroup cols={2}>
+  <Card title="Use the two-pass default" icon="forward">
+    The skill's default mode runs a quick scan first, then loads reference files only for questions with identified gaps. This typically reduces reference token load by 50–70% compared to loading all 57 files upfront.
+  </Card>
+  <Card title="Scope to specific pillars" icon="filter">
+    "Review security only" loads ~10 files instead of 57. Targeted reviews are faster, cheaper, and easier to act on than a full six-pillar report.
+  </Card>
+  <Card title="Mix models for pass 1 vs. pass 2" icon="layer-group">
+    Use a smaller, faster model (Nova Lite, Haiku) for the quick-scan pass and reserve a stronger model (Sonnet, Opus) for the deep-dive pass on flagged questions. The quick scan doesn't require frontier capability.
+  </Card>
+  <Card title="Enable prompt caching" icon="database">
+    WA reference files are static content — they cache extremely well. If your provider supports prompt caching (Anthropic, AWS Bedrock), enabling it eliminates repeated input costs on the same reference files across review iterations.
+  </Card>
+</CardGroup>

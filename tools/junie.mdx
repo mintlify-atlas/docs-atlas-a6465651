@@ -1,0 +1,120 @@
+---
+title: "Install Well-Architected Skills in JetBrains Junie"
+sidebarTitle: "Junie"
+description: "Configure JetBrains Junie with Well-Architected guidelines via .junie/guidelines/ and skills in .junie/skills/ for step-by-step architectural playbooks."
+---
+
+JetBrains Junie reads always-on guidelines from `.junie/guidelines/*.md` and discovers step-by-step skill playbooks from `.junie/skills/`. Installing both gives Junie persistent Well-Architected awareness in every conversation plus 11 structured assessment workflows it can follow on request — all from within your JetBrains IDE.
+
+## What gets installed
+
+<CardGroup cols={2}>
+  <Card title=".junie/guidelines/well-architected.md" icon="file-lines">
+    Always-on steering that applies the six Well-Architected pillars, design principles, and trade-off guidance to every Junie session in the project.
+  </Card>
+  <Card title=".junie/skills/ directory" icon="folder-open">
+    Eleven skill subdirectories, each containing a `SKILL.md` playbook. Junie follows these step-by-step when you request a specific review, plan, or assessment.
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone or download the source repo">
+    If you haven't already, clone the sample repository to a local path you can reference:
+
+    ```bash
+    git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+    ```
+  </Step>
+  <Step title="Copy files into your project">
+    Run the commands below from the root of your project directory, substituting `path/to/this-repo` with the actual clone location.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      mkdir -p .junie/guidelines .junie/skills
+      cp path/to/this-repo/adapters/junie/guidelines.md .junie/guidelines/well-architected.md
+      cp -r path/to/this-repo/skills/* .junie/skills/
+      ```
+
+      ```powershell Windows
+      New-Item -ItemType Directory -Force -Path .junie\guidelines, .junie\skills
+      Copy-Item path\to\this-repo\adapters\junie\guidelines.md .junie\guidelines\well-architected.md
+      Copy-Item -Recurse path\to\this-repo\skills\* .junie\skills\
+      ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify the layout">
+    Your project should now contain:
+
+    ```text
+    .junie/
+      guidelines/
+        well-architected.md
+      skills/
+        wa-review/SKILL.md
+        security-assessment/SKILL.md
+        reliability-improvement-plan/SKILL.md
+        cost-optimization-review/SKILL.md
+        performance-efficiency/SKILL.md
+        sustainability-optimization/SKILL.md
+        operational-excellence/SKILL.md
+        migration-readiness/SKILL.md
+        architecture-decision-record/SKILL.md
+        wa-builder/SKILL.md
+        wa-guardrails/SKILL.md
+    ```
+  </Step>
+</Steps>
+
+### Install via script
+
+If you prefer the one-command approach from a local clone, the install script handles directory creation and copying automatically:
+
+```bash
+./install.sh ~/my-project --tool junie
+```
+
+## Usage
+
+Once the files are installed, Junie automatically applies the Well-Architected guidelines from `.junie/guidelines/well-architected.md` to every conversation. Invoke a specific skill by describing what you want:
+
+<CodeGroup>
+  ```text Full WA review
+  Run a Well-Architected review of this architecture.
+  ```
+
+  ```text Security assessment
+  Do a security assessment focusing on IAM, detection controls, and data protection.
+  ```
+
+  ```text Operational excellence
+  Review our CI/CD pipeline and observability setup for operational excellence gaps.
+  ```
+
+  ```text ADR
+  Help me create an architecture decision record for the database approach we're choosing.
+  ```
+</CodeGroup>
+
+Junie reads the guidelines file at session start and loads the matching `.junie/skills/{skill-name}/SKILL.md` when a structured assessment is requested.
+
+<Tip>
+  Guidelines in `.junie/guidelines/` are loaded for every session, so Well-Architected principles apply to all architecture discussions — not only explicit review requests. Ask for a "quick review" first to locate gaps before drilling into individual pillars.
+</Tip>
+
+## Available skills
+
+| Skill | What it does |
+|-------|-------------|
+| `wa-review` | Full 6-pillar review with prioritized findings report |
+| `security-assessment` | Deep-dive into IAM, detection, data protection, incident response |
+| `reliability-improvement-plan` | Find SPOFs, assess recovery, produce remediation plan |
+| `cost-optimization-review` | Identify waste, right-sizing, pricing model improvements |
+| `performance-efficiency` | Resource selection, scaling, caching, optimization |
+| `sustainability-optimization` | Utilization, architecture efficiency, carbon reduction |
+| `operational-excellence` | CI/CD, observability, incident management, operational maturity |
+| `migration-readiness` | 7 Rs assessment, dependency analysis, migration plan |
+| `architecture-decision-record` | ADR with WA pillar impact analysis |
+| `wa-builder` | Learn WA for your workload and generate visual artifacts |
+| `wa-guardrails` | Generate preventive controls (Config rules, SCPs, CI checks) |

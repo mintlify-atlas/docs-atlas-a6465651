@@ -1,0 +1,105 @@
+---
+title: "Install Well-Architected Skills in Kiro IDE"
+sidebarTitle: "Kiro"
+description: "Configure Kiro IDE with Well-Architected steering, skills, and the wa-review Power for auto-activation and progressive reference loading during architecture reviews."
+---
+
+Kiro offers the deepest integration of any supported tool — it natively understands steering files (always-on context), skills (step-by-step playbooks), and Powers (bundled, auto-activating units). You can get up and running with a single script, a manual file copy, or the recommended Kiro Power, which auto-activates based on keywords and manages progressive reference loading automatically.
+
+## Install options
+
+<Tabs>
+  <Tab title="Kiro Power (recommended)">
+    The Kiro Power bundles the `wa-review` skill, steering files, and all 57 framework question files plus 27 lens packs into a single installable unit with keyword-based auto-activation. This is the richest integration available.
+
+    <Steps>
+      <Step title="Clone the repository">
+        ```bash
+        git clone https://github.com/aws-samples/sample-well-architected-skills-and-steering.git
+        ```
+      </Step>
+      <Step title="Import the Power in Kiro">
+        In Kiro, open the **Powers** panel, click **Add Custom Power**, choose **Import power from a folder**, then select the `powers/wa-review/` directory from the cloned repo.
+      </Step>
+      <Step title="Start using it">
+        Begin discussing your architecture. The Power activates automatically — no further configuration needed.
+      </Step>
+    </Steps>
+
+    <Note>
+      Kiro's **Import from GitHub** feature expects `POWER.md` at the repository root. Because this repo contains multiple skills and adapters, the Power lives under `powers/wa-review/` and must be imported from a local folder. If you prefer GitHub-based import, fork just the `powers/wa-review/` directory into its own repository.
+    </Note>
+
+    ### What the Power gives you
+
+    <CardGroup cols={3}>
+      <Card title="Auto-activation" icon="bolt">
+        Activates when you mention "well-architected", "architecture review", "security review", "reliability", and more — no slash command needed.
+      </Card>
+      <Card title="Context-aware steering" icon="compass">
+        Loads only the steering file relevant to your current task — full review steering or always-on WA principles, as appropriate.
+      </Card>
+      <Card title="Progressive reference loading" icon="layer-group">
+        Manages all 57 framework question files and 27 lens packs automatically, loading one at a time to stay within model context limits.
+      </Card>
+    </CardGroup>
+  </Tab>
+
+  <Tab title="Install script">
+    Run the install script from a local clone of the repository, targeting your project directory.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      ./install.sh ~/my-project --tool kiro
+      ```
+
+      ```powershell Windows
+      .\install.ps1 -TargetDir C:\Projects\my-app -Tool kiro
+      ```
+    </CodeGroup>
+
+    <Tip>
+      Add `--symlink` (bash) or `-Symlink` (PowerShell) to create symbolic links instead of copies. When the source repo updates, your project picks up the changes automatically without reinstalling.
+    </Tip>
+  </Tab>
+
+  <Tab title="Manual copy">
+    Copy the steering and skills directories directly into your project's `.kiro/` folder.
+
+    <CodeGroup>
+      ```bash macOS / Linux
+      mkdir -p .kiro/steering .kiro/skills
+      cp path/to/this-repo/steering/well-architected.md .kiro/steering/
+      cp -r path/to/this-repo/skills/* .kiro/skills/
+      ```
+
+      ```powershell Windows
+      New-Item -ItemType Directory -Force -Path .kiro\steering, .kiro\skills
+      Copy-Item path\to\this-repo\steering\well-architected.md .kiro\steering\
+      Copy-Item -Recurse path\to\this-repo\skills\* .kiro\skills\
+      ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+## How Kiro loads the files
+
+Kiro reads `.kiro/steering/*.md` at the start of every conversation, making WA principles always available. When you invoke a skill — either by name or through the Power's keyword matching — Kiro follows the corresponding `SKILL.md` playbook step by step, reading reference files on demand rather than loading everything upfront.
+
+| File location | What it does | When it loads |
+|---|---|---|
+| `.kiro/steering/well-architected.md` | Six pillars, design principles, trade-off guidance | Every conversation |
+| `.kiro/steering/wa-review.md` | Full multi-step review process | Architecture review requests |
+| `.kiro/skills/*/SKILL.md` | Step-by-step assessment playbooks | On demand, per skill |
+
+## Verification
+
+Once installed, start a new conversation and mention your architecture. If the integration is working, Kiro will reference all six Well-Architected pillars with specific, evidence-backed guidance rather than generic responses.
+
+```text
+What Well-Architected pillars should I consider for this architecture?
+```
+
+<Tip>
+  With the Power installed, you can simply say "WA review" or "architecture review" and Kiro will launch the full structured assessment — no additional prompting required.
+</Tip>

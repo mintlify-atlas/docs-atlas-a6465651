@@ -1,0 +1,197 @@
+---
+title: "security-assessment: AWS Security Pillar Deep-Dive"
+sidebarTitle: "Security Assessment"
+description: "Assess IAM configurations, detection controls, data protection, network security, and incident response preparedness using the AWS Well-Architected Security pillar."
+---
+
+The `security-assessment` skill performs a focused deep-dive into your workload's security posture. Rather than covering all six Well-Architected pillars, it concentrates exclusively on the Security pillar — analyzing IAM policies, encryption configurations, network rules, and detection controls in your codebase to produce evidence-backed findings with specific file paths and line numbers.
+
+<Note>
+  Use `security-assessment` when you want a dedicated security review, IAM audit, or encryption check. For a multi-pillar review that includes security alongside reliability, cost, and other pillars, use `wa-review` instead.
+</Note>
+
+## What the Agent Analyzes
+
+The skill runs a structured discovery across five security domains before evaluating against WA Framework questions.
+
+<Steps>
+  <Step title="Identity and Access Management">
+    The agent examines all IAM configurations in the codebase:
+
+    - IAM role definitions (trust policies and permission policies)
+    - IAM policy documents (managed and inline)
+    - Service-linked roles and permission boundaries
+    - Resource-based policies (S3 bucket policies, KMS key policies, SQS policies)
+    - Cognito / Identity Center configurations
+    - API Gateway authorizers
+    - Lambda execution roles
+
+    **Automatically flagged as HIGH RISK:**
+    - `"Action": "*"` or `"Action": "service:*"` on mutating actions
+    - `"Resource": "*"` on policies allowing write/delete operations
+    - Cross-account trust with overly broad conditions
+    - Missing `Condition` blocks on sensitive operations
+    - Long-lived credentials (access keys in code or config)
+  </Step>
+  <Step title="Encryption and Data Protection">
+    The agent checks encryption configurations across all resources:
+
+    - KMS key definitions and key policies
+    - Encryption-at-rest on all storage (S3, EBS, RDS, DynamoDB, EFS, Secrets Manager)
+    - Encryption-in-transit (TLS configs, listener rules, security policies)
+    - Certificate management (ACM, self-signed)
+    - Secrets management (Secrets Manager, Parameter Store SecureString, environment variables)
+
+    **Automatically flagged as HIGH RISK:**
+    - Any storage resource without encryption at rest enabled
+    - TLS versions below 1.2 on any listener or endpoint
+    - Security policies allowing weak cipher suites (RC4, DES, 3DES, MD5-based MACs)
+    - Secrets in environment variables, hardcoded strings, or config files
+    - KMS keys without rotation enabled
+  </Step>
+  <Step title="Network Protection">
+    The agent analyzes all network security configurations:
+
+    - VPC definitions (subnets, route tables, internet gateways)
+    - Security group rules (ingress and egress)
+    - Network ACLs, WAF rules, and web ACLs
+    - VPC endpoints (interface and gateway)
+    - Load balancer security (listeners, target groups, security policies)
+    - API Gateway endpoint types and throttling
+
+    **Automatically flagged as HIGH RISK:**
+    - Security group ingress `0.0.0.0/0` on ports other than 443/80
+    - Security group ingress `0.0.0.0/0` on SSH (22) or RDP (3389)
+    - Public subnets hosting databases or internal services
+    - Missing VPC endpoints for S3/DynamoDB (traffic routing through NAT/internet)
+    - No WAF on internet-facing endpoints
+  </Step>
+  <Step title="Detection and Response">
+    The agent checks security monitoring and incident response:
+
+    - CloudTrail configurations
+    - GuardDuty enablement
+    - Security Hub configurations
+    - AWS Config Rules
+    - VPC Flow Log settings
+    - CloudWatch alarms for security events (root login, unauthorized API calls)
+    - Automated response configurations (Lambda remediation, Step Functions)
+    - S3 access logging
+  </Step>
+  <Step title="Compute Protection">
+    The agent reviews compute security configurations:
+
+    - Lambda function configurations (runtime, VPC attachment, reserved concurrency)
+    - ECS/EKS task definitions (privileged mode, user, capabilities, secrets injection)
+    - EC2 launch templates (IMDSv2, user data, security groups)
+    - Container image sources and scanning configurations
+    - SSM Session Manager configurations
+
+    **Automatically flagged as HIGH RISK:**
+    - Containers running in privileged mode without justification
+    - EC2 instances with IMDSv1 enabled (hop limit > 1 without IMDSv2 required)
+    - No container image scanning configured
+    - SSH access enabled where SSM Session Manager would suffice
+  </Step>
+</Steps>
+
+## WA Framework Coverage: SEC 1–11
+
+After discovery, the agent evaluates your workload against all 11 Security pillar questions.
+
+| Question | Focus Area |
+|----------|-----------|
+| SEC 1 | Secure workload operations — security baselines, account separation, threat detection, automated response |
+| SEC 2 | Identity management — centralized identity, role separation, credential lifecycle, MFA |
+| SEC 3 | Permission management — least privilege, permission boundaries, access analysis, regular review |
+| SEC 4 | Detection and investigation — CloudTrail, GuardDuty, Security Hub, VPC Flow Logs, DNS logging |
+| SEC 5 | Network resource protection — VPC segmentation, security groups, WAF, private subnets, VPC endpoints |
+| SEC 6 | Compute resource protection — patching, container scanning, runtime protection, minimal privileges |
+| SEC 7 | Data classification — classification tags, sensitivity labels, data catalog configurations |
+| SEC 8 | Data protection at rest — encryption on all stores, KMS policies, key rotation |
+| SEC 9 | Data protection in transit — TLS 1.2+ enforcement, certificate management, HTTPS-only |
+| SEC 10 | Incident response — response automation, forensic capabilities, containment procedures |
+| SEC 11 | Application security — (covered through cross-cutting analysis) |
+
+## Output Format
+
+The skill produces a structured security report including:
+
+- **Security Scorecard** — 1–5 score across six domains (Identity & Access, Data Protection at rest, Data Protection in transit, Network Protection, Compute Protection, Detection & Response)
+- **Critical and High Risk Findings** — with domain, title, description, file-path evidence, impact assessment, recommendation, effort, and relevant AWS services
+- **Medium and Low Risk Findings** — in condensed format
+- **Compliance Mapping** — if you specify a compliance framework (SOC 2, HIPAA, PCI-DSS, FedRAMP, GDPR), the agent maps every Critical/High finding to the relevant control
+- **Prioritized Remediation Plan** — Quick Wins (< 1 week), Foundation (1–4 weeks), Strategic (1–3 months)
+
+## How to Invoke
+
+<CodeGroup>
+```text Natural language — general
+security review
+security assessment
+check our security posture
+```
+
+```text Natural language — focused
+IAM audit
+IAM review — check for over-permissive roles
+encryption check — are all our stores encrypted?
+review our network security configuration
+check for hardcoded secrets
+```
+
+```text Claude Code (slash command)
+/security-assessment
+```
+</CodeGroup>
+
+## Example Interactions
+
+```text
+You: Security review — we're SOC 2 Type II compliant and want to validate our controls.
+
+Agent: I'll assess your workload against the Well-Architected Security pillar (SEC 1–10)
+and map findings to SOC 2 Trust Service Criteria.
+
+Analyzing: IAM policies, encryption configs, VPC/security groups, CloudTrail,
+GuardDuty, Security Hub, compute protection...
+
+[Discovery checkpoint]
+
+Here is what I found:
+- IAM: 3 Lambda execution roles with wildcard actions, 1 cross-account trust without conditions
+- Encryption: RDS instance missing encryption at rest (line 47, database.ts)
+- Network: Security group allows SSH from 0.0.0.0/0 (line 23, network.tf)
+
+Shall I proceed with the full SEC 1–10 evaluation and SOC 2 mapping?
+```
+
+## Risk Assessment Model
+
+The agent uses Impact × Likelihood to assign risk levels to each finding.
+
+| Impact | Likelihood | Risk Level |
+|--------|-----------|-----------|
+| Severe (data breach, regulatory violation, privilege escalation) | High | Critical |
+| Severe | Medium | High |
+| Severe | Low | High |
+| Moderate (partial data exposure, minor compliance gap) | High | High |
+| Moderate | Medium | Medium |
+| Moderate | Low | Medium |
+| Minor (limited exposure, no compliance violation) | High | Medium |
+| Minor | Medium | Low |
+| Minor | Low | Low |
+
+<Warning>
+  TLS below 1.2 is always rated **Critical**. Weak cipher suites are always rated **High**. These are non-negotiable regardless of other mitigating factors.
+</Warning>
+
+## Benchmark Results
+
+Evaluated with Claude Opus 4.8, 16K output tokens, paired comparison (same prompt with and without skill):
+
+| Baseline | With Skill | Delta |
+|----------|-----------|-------|
+| 94% | **100%** | **+6%** |
+
+The skill brings a strong baseline model to 100% on behavioral assertions covering IAM analysis depth, encryption coverage, finding specificity, and remediation quality.

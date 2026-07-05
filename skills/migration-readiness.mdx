@@ -1,0 +1,220 @@
+---
+title: "migration-readiness: 7 Rs Assessment and Migration Planning"
+sidebarTitle: "Migration Readiness"
+description: "Assess workload readiness to migrate to AWS using the 7 Rs framework (Rehost, Replatform, Repurchase, Refactor, Retire, Retain, Relocate) with a detailed migration plan."
+---
+
+The `migration-readiness` skill teaches your AI coding agent to assess a workload's readiness to move to AWS. It analyzes your codebase, infrastructure configurations, and dependency graph to recommend a migration strategy per component using the 7 Rs framework, score readiness across all six Well-Architected pillars, and produce a phased migration plan with risk assessment and rough cost comparison.
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="7 Rs Strategy per Component" icon="arrows-split-up-and-left">
+    Recommends the right migration strategy for each application component based on code evidence — not guesswork. Every recommendation is justified by what the agent finds in your files.
+  </Card>
+  <Card title="Dependency Mapping" icon="diagram-project">
+    Produces a PlantUML dependency diagram showing service-to-service connections, shared databases, data flows, and migration wave groupings — the most critical input for sequencing.
+  </Card>
+  <Card title="Pillar-by-Pillar Readiness" icon="list-check">
+    Scores each of the six WA pillars for migration readiness: Ready, Conditionally Ready, or Not Ready — with the specific actions required before migration begins.
+  </Card>
+  <Card title="Phased Migration Plan" icon="calendar">
+    Delivers a three-phase plan (Mobilize → Migrate → Optimize) with migration waves ordered by dependency analysis, not arbitrary sequencing.
+  </Card>
+</CardGroup>
+
+## The 7 Rs explained
+
+<Accordion title="Rehost — Lift and shift">
+  Move the workload to AWS with no code changes. Use when speed matters most and the application runs on standard OS with no proprietary dependencies. AWS Migration Hub and AWS MGN automate the lift.
+
+  **Code indicators**: standard OS, containerizable application, no OS-specific system calls, no hardcoded IPs.
+</Accordion>
+
+<Accordion title="Replatform — Lift and optimize">
+  Make targeted optimizations during the move — for example, swapping a self-managed database for Amazon RDS, or a self-managed Redis for ElastiCache — without changing the core application architecture.
+
+  **Code indicators**: self-managed MySQL/PostgreSQL configs, self-managed Redis or Memcached, application code that connects via a standard driver without engine-specific extensions.
+</Accordion>
+
+<Accordion title="Repurchase — Drop and shop">
+  Replace the current system with a SaaS or AWS-native equivalent. Common for CRM, HR systems, and commercial middleware with available replacements.
+
+  **Code indicators**: commercial software dependencies (Oracle Forms, Siebel, legacy ESB), vendor-specific APIs without open alternatives.
+</Accordion>
+
+<Accordion title="Refactor — Re-architect">
+  Re-design the application to use cloud-native capabilities — decomposing a monolith, moving to serverless, or converting stateful to stateless. Highest effort, highest long-term benefit.
+
+  **Code indicators**: monolithic codebase with tightly coupled modules, session state stored locally, file system dependencies, opportunity for Lambda/Fargate conversion.
+</Accordion>
+
+<Accordion title="Retire — Decommission">
+  Shut down the workload entirely. It's no longer used or its functionality is covered elsewhere.
+
+  **Code indicators**: zero inbound traffic patterns documented, deprecated service with no active consumers, marked as end-of-life in documentation.
+</Accordion>
+
+<Accordion title="Retain — Keep on-premises">
+  Keep the workload where it is for now. Use when blockers exist: compliance constraints, hardware dependencies, or a migration that isn't justified by business value yet.
+
+  **Code indicators**: FPGA or GPU dependencies, USB dongle licensing, proprietary OS features without cloud equivalents, hard regulatory constraints on data residency.
+</Accordion>
+
+<Accordion title="Relocate — Move to cloud without changes">
+  Migrate VMware workloads to VMware Cloud on AWS using VMware vMotion — no OS, application, or tooling changes required.
+
+  **Code indicators**: VMware vSphere configurations, VMX files, VMware-specific tooling in CI/CD.
+</Accordion>
+
+## WA pillar coverage in migration context
+
+The skill assesses all six pillars specifically for migration readiness — not as a general WA review, but as a pre-migration checklist:
+
+<Tabs>
+  <Tab title="Operational Excellence">
+    Is there IaC? Can CI/CD pipelines target AWS? Is monitoring portable or tied to on-premises tooling? Are operational procedures documented well enough to survive the migration?
+  </Tab>
+  <Tab title="Security">
+    How are secrets managed — hardcoded, vault, or config files? Are compliance requirements affecting region or service choice? Is identity management compatible with AWS IAM and IAM Identity Center?
+  </Tab>
+  <Tab title="Reliability">
+    What is the current availability target and can AWS match or beat it? What's the acceptable downtime during cutover? Are backup and recovery procedures tested?
+  </Tab>
+  <Tab title="Performance Efficiency">
+    Are there latency-sensitive integrations that will span hybrid during migration? What are the current performance baselines and SLAs to maintain during cutover?
+  </Tab>
+  <Tab title="Cost Optimization">
+    What is the current TCO including hardware, licensing, operations, and facilities? Are there licensing implications (BYOL vs license-included)? Are there existing prepaid commitments that affect timing?
+  </Tab>
+  <Tab title="Sustainability">
+    Can migration reduce the overall resource footprint? Are there opportunities to adopt Graviton or serverless patterns during the move?
+  </Tab>
+</Tabs>
+
+## How to invoke it
+
+<CodeGroup>
+```text Migration assessment
+Run a migration readiness assessment for this workload
+```
+
+```text Strategy selection
+Should we rehost or refactor our monolith?
+```
+
+```text Migration plan
+Create a migration plan for our Node.js API and its PostgreSQL database
+```
+
+```text Blockers
+What are the blockers preventing us from migrating this application to AWS?
+```
+</CodeGroup>
+
+## What the agent assesses
+
+<Steps>
+  <Step title="Application stack discovery">
+    The agent inventories every programming language and runtime, framework, database technology, middleware, external service dependency, and build system. Each component is documented with its AWS equivalent, migration complexity, and dependencies.
+  </Step>
+  <Step title="Infrastructure discovery">
+    Server configurations, network topology, storage systems, database replication setups, backup policies, and existing IaC (Terraform, Ansible, Chef) are analyzed to understand what needs to move and how.
+  </Step>
+  <Step title="Dependency mapping">
+    The agent maps all service-to-service communication, shared databases, external API integrations, authentication dependencies (LDAP, AD), and batch job ordering constraints. Shared databases — the most common source of migration complexity — are explicitly flagged.
+  </Step>
+  <Step title="Checkpoint — confirm strategy phase">
+    The skill pauses with a summary of blockers, high-risk dependencies, and wave groupings before proceeding to 7 Rs recommendations.
+  </Step>
+  <Step title="7 Rs strategy per component">
+    Each component receives a strategy recommendation justified by code evidence with complexity rating and dependency-ordered migration sequencing.
+  </Step>
+  <Step title="Checkpoint — confirm assessment phase">
+    After risk assessment, the skill presents the overall readiness verdict (Ready / Conditionally Ready / Not Ready) before producing the full report.
+  </Step>
+  <Step title="Full migration plan">
+    The three-phase plan (Mobilize, Migrate, Optimize) is produced with dependency-ordered migration waves, AWS service mapping, pre-migration checklist, and rough cost comparison.
+  </Step>
+</Steps>
+
+## Example output
+
+```markdown
+# Migration Readiness Assessment: retail-platform
+
+## Executive Summary
+- Date: 2025-06-01
+- Recommended Strategy: Replatform (database) + Rehost (API tier) + Refactor (batch jobs)
+- Overall Readiness: Conditionally Ready
+- Estimated Effort: Large (12–16 weeks)
+- Key Risks: Shared orders database consumed by 3 services, Oracle licensing, hardcoded hostnames
+- Critical Blockers: 2 (Oracle dependency, hardcoded IP in payment-service)
+
+## Application Stack Summary
+| Component      | Technology      | Version | AWS Equivalent         | Strategy    | Complexity |
+|----------------|-----------------|---------|------------------------|-------------|------------|
+| Web API        | Node.js Express | 18      | EC2 / Elastic Beanstalk | Rehost      | Low        |
+| Auth Service   | Spring Boot     | 3.1     | EC2 / ECS Fargate      | Rehost      | Low        |
+| Orders DB      | PostgreSQL 14   | 14.8    | Amazon RDS PostgreSQL  | Replatform  | Medium     |
+| Batch Jobs     | Cron + Python   | 3.11    | AWS Batch / Step Fns   | Refactor    | High       |
+| Reporting Tool | Oracle Reports  | 12c     | Amazon QuickSight      | Repurchase  | High       |
+
+## Critical Blockers
+**BLOCK-001** — Hardcoded IP address in payment service
+payment-service/src/config/db.config.js:14 contains `host: "10.1.2.50"` — will break
+immediately after migration. Must be parameterized before any migration wave.
+Resolution: Replace with environment variable + AWS Secrets Manager reference
+Effort: Low (1–2 hours)
+
+## Migration Plan
+
+### Phase 1: Mobilize (Weeks 1–2)
+| Task                         | AWS Service       | Evidence                |
+|------------------------------|-------------------|-------------------------|
+| Set up landing zone          | AWS Control Tower | —                       |
+| Establish Direct Connect VPN | AWS Direct Connect| network-topology.md     |
+| Resolve critical blockers    | —                 | BLOCK-001, BLOCK-002    |
+
+### Phase 2: Migrate — Wave 1 (Weeks 3–4): Auth Service
+### Phase 2: Migrate — Wave 2 (Weeks 5–8): Web API + Orders DB (replatform to RDS)
+### Phase 2: Migrate — Wave 3 (Weeks 9–12): Batch Jobs (refactor to AWS Batch)
+
+### Phase 3: Optimize (Weeks 13–16)
+| Optimization             | Expected Benefit          | AWS Service      |
+|--------------------------|---------------------------|------------------|
+| Migrate EC2 to Graviton  | ~20% cost reduction       | EC2 (r8g)        |
+| Enable RDS Multi-AZ      | 99.95% availability SLA   | RDS              |
+| Batch → Step Functions   | Pay-per-execution, no idle| Step Functions   |
+```
+
+## Effectiveness
+
+<Note>
+  Evaluated using an automated LLM-as-judge framework with paired comparison (same prompt, with and without skill context) using Claude Opus 4.8.
+</Note>
+
+| | Baseline | With skill | Delta |
+|--|---------|-----------|-------|
+| **Score** | 85% | 100% | **+15%** |
+
+The skill's biggest contribution is enforcing code-evidenced strategy recommendations and surfacing dependency ordering constraints — particularly shared databases — that a bare agent typically glosses over.
+
+## Follow-up actions the agent offers
+
+After delivering the assessment, the agent offers to:
+
+- Design the AWS landing zone architecture for the target environment
+- Create a detailed data migration plan for a specific database using AWS DMS
+- Estimate AWS costs in detail for specific components using the Pricing Calculator inputs
+- Build a pre-migration testing strategy including rollback procedures
+- Design the hybrid connectivity architecture for the migration period
+- Generate IaC for the target AWS architecture (CDK, Terraform, or CloudFormation)
+
+## Related skills
+
+| Skill | When to use instead |
+|-------|---------------------|
+| [`wa-review`](/skills/wa-review) | Assess an existing AWS workload across all six pillars post-migration |
+| [`reliability-improvement-plan`](/skills/reliability-improvement-plan) | Focus on SPOF elimination and recovery targets for a workload already on AWS |
+| [`architecture-decision-record`](/skills/architecture-decision-record) | Document the migration strategy decision (e.g., rehost vs refactor) as a formal ADR |
