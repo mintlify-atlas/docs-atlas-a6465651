@@ -30,7 +30,7 @@ npx skills add aws-samples/sample-well-architected-skills-and-steering -g
 
 ## Bootstrap script
 
-The bootstrap script downloads the repository as an archive, extracts it to a temporary directory, runs `install.sh` (or `install.ps1`) with the arguments you pass, and removes the temporary directory on exit. With no arguments it defaults to `--tool auto --force`, which detects and installs for all AI tools found in the current directory.
+The bootstrap script downloads the repository as an archive, extracts it to a temporary directory, runs `install.sh` (or `install.ps1`) with the arguments you pass, and removes the temporary directory on exit. With no arguments it defaults to `--tool auto --force`, which auto-detects every AI tool configured in the current directory and installs for each one, overwriting any existing files without prompting.
 
 <CodeGroup>
 ```bash macOS / Linux

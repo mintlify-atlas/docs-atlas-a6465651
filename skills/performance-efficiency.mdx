@@ -1,7 +1,7 @@
 ---
-title: "performance-efficiency: Optimize AWS Resource Selection and Scaling"
+title: "performance-efficiency: AWS Performance Efficiency Review"
 sidebarTitle: "Performance Efficiency"
-description: "Evaluate resource selection, compute configurations, data storage choices, networking, and scaling strategies against the AWS Well-Architected Performance Efficiency pillar."
+description: "Evaluate resource selection, scaling configs, caching patterns, and data access against the AWS Well-Architected Performance Efficiency pillar (PERF 1–5)."
 ---
 
 The `performance-efficiency` skill performs a focused assessment of your workload's performance posture. It analyzes resource selection, scaling configurations, caching patterns, and data access patterns in your codebase to identify bottlenecks and improvement opportunities — every finding includes a specific file path, evidence, and an estimated performance impact.
@@ -125,9 +125,9 @@ The skill runs a structured discovery across six performance domains before eval
   </Step>
 </Steps>
 
-## WA Framework Coverage: PERF 1–8
+## WA Framework Coverage: PERF 1–5
 
-After discovery, the agent evaluates your workload against the Performance Efficiency pillar questions.
+After discovery, the agent evaluates your workload against all 5 Performance Efficiency pillar questions.
 
 | Question | Focus Area |
 |----------|-----------|
@@ -136,9 +136,6 @@ After discovery, the agent evaluates your workload against the Performance Effic
 | PERF 3 | Storage solution — storage types matching access patterns, IOPS configs, tiering strategies |
 | PERF 4 | Database solution — engine selection, read replicas, connection pooling, caching layers |
 | PERF 5 | Networking solution — CloudFront, VPC endpoints, placement groups, compression |
-| PERF 6 | Evolving with new releases — runtime versions, SDK versions, Graviton adoption, modern features |
-| PERF 7 | Performance monitoring — latency metrics at percentiles, throughput tracking, performance alarms |
-| PERF 8 | Performance trade-offs — caching strategies, async patterns, eventual consistency choices |
 
 ## Output Format
 

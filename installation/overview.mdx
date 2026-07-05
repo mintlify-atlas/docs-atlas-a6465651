@@ -1,7 +1,7 @@
 ---
-title: "Install Well-Architected Skills — All Methods"
+title: "Installing Well-Architected Skills — All Methods"
 sidebarTitle: "Overview"
-description: "Three ways to install AWS Well-Architected skills into your project: skills.sh (npx), bootstrap scripts, or local install script. Supports macOS, Linux, and Windows."
+description: "Three ways to add AWS Well-Architected skills: npx skills add, bootstrap scripts, or the local install script. Covers macOS, Linux, and Windows."
 ---
 
 There are three ways to install Well-Architected skills into your AI coding tool. **skills.sh via npx** and the **bootstrap scripts** require no local clone — they download the repo to a temporary directory, run the installer, and clean up. The **local install script** (`install.sh` / `install.ps1`) gives you the most control: symlink support, selective tool targeting, uninstall, and update checking. All three methods auto-detect which AI coding tools are configured in your project.
@@ -47,6 +47,7 @@ The following options are accepted by `install.sh` on macOS and Linux.
 | `--force` | Overwrite existing files without prompting |
 | `--uninstall` | Remove previously installed Well-Architected files from the target directory |
 | `--check-update` | Check if a newer version is available on GitHub |
+| `--help` | Show the usage message and exit |
 
 ## install.ps1 parameters reference
 
@@ -54,11 +55,11 @@ The following parameters are accepted by `install.ps1` on Windows PowerShell.
 
 | Parameter | Description |
 |---|---|
+| `-TargetDir` | Project directory to install into (default: current directory) |
 | `-Tool` | Target tool(s). Accepts a comma-separated list. Valid values: `kiro`, `kiro-cli`, `claude-code`, `cursor`, `codex`, `windsurf`, `github-copilot`, `cline`, `gemini-cli`, `antigravity`, `junie`, `amp`, `openclaw`, `devops-agent`, `auto`, `all` |
 | `-Symlink` | Use symlinks instead of copies (requires elevated permissions on Windows) |
 | `-Global` | Install to home directory (`%USERPROFILE%\CLAUDE.md`, etc.) and apply to all projects |
 | `-Force` | Overwrite existing files without prompting |
-| `-TargetDir` | Project directory to install into (default: current directory) |
 
 <Note>
   **Global installs** place files in your home directory — for example `~/CLAUDE.md`, `~/.kiro/`, `~/.cursor/`, `~/.junie/` — and apply to all projects that don't have their own project-level configuration. Use project-level installation (the default) if you only want Well-Architected guidance for specific projects. The installer prompts before overwriting existing files unless `--force` / `-Force` is supplied.

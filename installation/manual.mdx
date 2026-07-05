@@ -1,10 +1,10 @@
 ---
-title: "Manual Installation from a Local Clone"
+title: "Manual Installation: Clone and Run the Install Script"
 sidebarTitle: "Manual Install"
 description: "Install Well-Architected skills from a local clone of the repository. Supports symlinks for automatic updates and multi-tool installation in one command."
 ---
 
-The local install script gives you the most control over how and where skills are installed. Because you have a full clone on disk, you can use `--symlink` mode to have your project always reflect the latest version of the repo without reinstalling, target multiple tools in a single command, uninstall cleanly, and check for newer releases. The same script (`install.sh` on macOS/Linux, `install.ps1` on Windows) handles all 13 supported tools.
+The local install script gives you the most control over how and where skills are installed. Because you have a full clone on disk, you can use `--symlink` mode to have your project always reflect the latest version of the repo without reinstalling, target multiple tools in a single command, uninstall cleanly, and check for newer releases. The same script (`install.sh` on macOS/Linux, `install.ps1` on Windows) handles all 14 supported tools.
 
 ## Step 1 — Clone the repository
 
@@ -113,7 +113,6 @@ By default the installer copies files into your project. Symlink mode creates sy
 
 The `--uninstall` flag removes all Well-Architected files that were previously installed for the specified tool. It mirrors the exact set of files and directories that the installer would write, so it is safe to run even if some files were later moved or deleted manually.
 
-<CodeGroup>
 ```bash macOS / Linux
 # Uninstall for a specific tool
 ./install.sh ~/my-project --uninstall --tool claude-code
@@ -122,14 +121,8 @@ The `--uninstall` flag removes all Well-Architected files that were previously i
 ./install.sh ~/my-project --uninstall --tool all
 ```
 
-```powershell Windows PowerShell
-# Uninstall for a specific tool (re-run install.ps1 with manual removal — see note)
-.\install.ps1 -TargetDir C:\Projects\my-app -Tool claude-code
-```
-</CodeGroup>
-
 <Note>
-  The `--uninstall` flag is currently available on `install.sh` (macOS/Linux). On Windows, remove the installed files manually by deleting the directories listed in the [tool compatibility matrix](https://github.com/aws-samples/sample-well-architected-skills-and-steering#tool-compatibility-matrix) for your tool.
+  The `--uninstall` flag is only available on `install.sh` (macOS/Linux). `install.ps1` does not include an uninstall option. On Windows, remove the installed files manually by deleting the directories listed in the [tool compatibility matrix](https://github.com/aws-samples/sample-well-architected-skills-and-steering#tool-compatibility-matrix) for your tool.
 </Note>
 
 ## Checking for updates

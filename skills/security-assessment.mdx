@@ -1,7 +1,7 @@
 ---
 title: "security-assessment: AWS Security Pillar Deep-Dive"
 sidebarTitle: "Security Assessment"
-description: "Assess IAM configurations, detection controls, data protection, network security, and incident response preparedness using the AWS Well-Architected Security pillar."
+description: "Assess IAM configurations, detection controls, data protection, and network security using the AWS Well-Architected Security pillar (SEC 1–11)."
 ---
 
 The `security-assessment` skill performs a focused deep-dive into your workload's security posture. Rather than covering all six Well-Architected pillars, it concentrates exclusively on the Security pillar — analyzing IAM policies, encryption configurations, network rules, and detection controls in your codebase to produce evidence-backed findings with specific file paths and line numbers.
@@ -150,7 +150,7 @@ check for hardcoded secrets
 ```text
 You: Security review — we're SOC 2 Type II compliant and want to validate our controls.
 
-Agent: I'll assess your workload against the Well-Architected Security pillar (SEC 1–10)
+Agent: I'll assess your workload against the Well-Architected Security pillar (SEC 1–11)
 and map findings to SOC 2 Trust Service Criteria.
 
 Analyzing: IAM policies, encryption configs, VPC/security groups, CloudTrail,
@@ -163,7 +163,7 @@ Here is what I found:
 - Encryption: RDS instance missing encryption at rest (line 47, database.ts)
 - Network: Security group allows SSH from 0.0.0.0/0 (line 23, network.tf)
 
-Shall I proceed with the full SEC 1–10 evaluation and SOC 2 mapping?
+Shall I proceed with the full SEC 1–11 evaluation and SOC 2 mapping?
 ```
 
 ## Risk Assessment Model

@@ -1,7 +1,7 @@
 ---
-title: "operational-excellence: Assess CI/CD, Observability, and Incidents"
+title: "operational-excellence: CI/CD, Observability, Incidents"
 sidebarTitle: "Operational Excellence"
-description: "Evaluate CI/CD pipelines, observability configurations, incident management processes, and automation against the AWS Well-Architected Operational Excellence pillar."
+description: "Evaluate CI/CD pipelines, observability configs, incident management, and deployment risks against the AWS Well-Architected Operational Excellence pillar."
 ---
 
 The `operational-excellence` skill teaches your AI coding agent to assess workloads against the AWS Well-Architected Operational Excellence pillar. It reads your actual CI/CD pipeline definitions, CloudWatch configurations, deployment strategies, and incident management patterns to produce evidence-backed findings — every gap is cited to a specific file and line number, never inferred from silence.
@@ -25,7 +25,7 @@ The `operational-excellence` skill teaches your AI coding agent to assess worklo
 
 ## WA Operational Excellence pillar coverage
 
-The skill evaluates all eleven Operational Excellence pillar questions with evidence sourced from your codebase.
+The skill evaluates all ten Operational Excellence pillar questions with evidence sourced from your codebase.
 
 <Accordion title="OPS 1–3 — Organization, culture, and priorities">
   Checks for SLO/SLI definitions, CODEOWNERS files, business metric dashboards, PR templates, and contributing guides that reflect a healthy operational culture.
@@ -51,7 +51,7 @@ The skill evaluates all eleven Operational Excellence pillar questions with evid
   Checks for CompositeAlarm constructs, health check endpoints, DORA metrics tracking, and pipeline health dashboards.
 </Accordion>
 
-<Accordion title="OPS 10–11 — Event management and evolution">
+<Accordion title="OPS 10 — Event management and evolution">
   Examines EventBridge rule definitions, automated remediation Lambda functions, SNS topic subscriptions, and escalation configurations.
 </Accordion>
 
